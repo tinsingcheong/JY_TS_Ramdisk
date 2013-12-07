@@ -310,9 +310,11 @@ int search_file(uint8_t* rd, char* path){
 		else if(current_inode->size>8*BLOCKSIZE && current_inode->size<=72*BLOCKSIZE){
 			size_region_type=1;
 		}
-		else if(current_inode->size>72*BLOCKSIZE && current_inode->size<=1067008*BLOCKSIZE){
+		else if(current_inode->size>72*BLOCKSIZE && current_inode->size<=4168*BLOCKSIZE){
 			size_region_type=2;
 		}
+
+
 
 		
 		for(i=0;i<8;i++){
