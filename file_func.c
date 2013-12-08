@@ -46,7 +46,7 @@ void create_file (uint8_t* rd, int ParentInodeNO, char* name)
     struct superblock* SuperBlock;
     struct inode* ParentInode;
     struct inode* Inode;
-    int InodeNO;
+    uint16_t InodeNO;
     int blockNO;
     int new_block_id;
     uint8_t entry_pos;
@@ -68,24 +68,50 @@ void create_file (uint8_t* rd, int ParentInodeNO, char* name)
     {
         InodeNO = find_next_free_inode(rd);
         set_inode_bitmap(rd, InodeNO);
-        Inode->type = (uint8_t) 0x01;
-        Inode->size = (uint32_t) 0x0;
-        update_inode(rd, InodeNO, Inode);
+        Inode->type = (uint8_t) 0x01; // Initialize the type as regular file
+        Inode->size = (uint32_t) 0x0; // Initialize the size as 0
+        update_inode(rd, InodeNO, Inode); // Update the new Inode
+        // Update the Parent Inode information
         read_inode(rd, ParentInodeNO, ParentInode);
         double temp = ParentInode->size/BLOCK_SIZE;
-        if (temp - (int)temp > 0)
-            blockNO = (int)temp+1;
-        else if (temp - (int)temp < 0)
+        if (temp - (int)temp > 0) // if the current blocks are not filled up
             blockNO = (int)temp;
-        else {
+        else if (temp-(int)temp == 0) { // if the current blocks are filled up
             blockNO = (int)temp+1;
             new_block_id = find_next_free_block(rd);
-            set_bitmap(rd, blockNO);
-            ParentInode->BlockPointer[blockNO] = rd+new_block_id*BLOCK_SIZE;
+            set_bitmap(rd, new_block_id);
+            if (blockNO<=7 && blockNO>=0) 
+                ParentInode->BlockPointer[blockNO] = rd+new_block_id*BLOCK_SIZE;
+            else if (blockNO > 7 && blockNO <= 7+64)
+                *(ParentInode->BlockPointer[8]+blockNO-8) = rd+new_block_id*BLOCK_SIZE;
+            else if (blockNO > 7+64 && blockNO <= 7+64+64*64)
+                *(*(ParentInode->BlockPointer[9])+blockNO-8-64) = rd+new_block_id*BLOCK_SIZE;
+            else{
+#ifdef UL_DEBUG
+                printf("Block # is smaller than 0 or bigger than the limit!\n");
+#endif
+            }
         }
-        entry_pos=ParentInode->size%BLOCK_SIZE;  
-        strcpy(rd[ParentInode->BlockPointer[blockNO]+entry_pos], name);
-        *rd[ParentInode->BlockPointer[blockNO]+entry_pos+15] = InodeNO;
+
+        entry_pos=ParentInode->size%BLOCK_SIZE; // the position that the entry should be written to 
+        if (blockNO<=7 && blockNO>=0) {
+            strcpy(rd[ParentInode->BlockPointer[blockNO]+entry_pos], name);
+            *rd[ParentInode->BlockPointer[blockNO]+entry_pos+15] = InodeNO;
+        }
+        else if (blockNO>7 && blockNO<=7+64) {
+            strcpy(rd[*(ParentInode->BlockPointer[8]+blockNO-8)+entry_pos],name);
+            *rd[*(ParentInode->BlockPointer[8]+blockNO-8)+entry_pos+15]=InodeNO;
+        }
+        else if (blockNO>7+64 && blockNO<=7+64+64*64) {
+            strcpy(rd[*(*(ParentInode->BlockPointer[9])+blockNO-8)+entry_pos],name);
+            *rd[*(*(ParentInode->BlockPointer[9])+blockNO-8)+entry_pos+15]=InodeNO;
+        }
+        else{
+#ifdef UL_DEBUG
+            printf("Block # is smaller than 0 or bigger than the limit!\n");
+#endif
+        }
+            
         ParentInode->size += 16;
         update_inode(rd, ParentInodeNO, ParentInode);
     }    
@@ -104,7 +130,7 @@ void create_dir (uint8_t* rd, int ParentDirInode, char* name)
     struct superblock* SuperBlock;
     struct inode* ParentInode;
     struct inode* Inode;
-    int InodeNO;
+    uint16_t InodeNO;
     int blockNO;
     int new_block_id;
     uint8_t entry_pos;
@@ -132,18 +158,42 @@ void create_dir (uint8_t* rd, int ParentDirInode, char* name)
         read_inode(rd, ParentInodeNO, ParentInode);
         double temp = ParentInode->size/BLOCK_SIZE;
         if (temp - (int)temp > 0)
-            blockNO = (int)temp+1;
-        else if (temp - (int)temp < 0)
             blockNO = (int)temp;
         else {
             blockNO = (int)temp+1;
             new_block_id = find_next_free_block(rd);
             set_bitmap(rd, blockNO);
-            ParentInode->BlockPointer[blockNO] = rd+new_block_id*BLOCK_SIZE;
+            if (blockNO<=7 && blockNO>=0) 
+                ParentInode->BlockPointer[blockNO] = rd+new_block_id*BLOCK_SIZE;
+            else if (blockNO > 7 && blockNO <= 7+64)
+                *(ParentInode->BlockPointer[8]+blockNO-8) = rd+new_block_id*BLOCK_SIZE;
+            else if (blockNO > 7+64 && blockNO <= 7+64+64*64)
+                *(*(ParentInode->BlockPointer[9])+blockNO-8-64) = rd+new_block_id*BLOCK_SIZE;
+            else{
+#ifdef UL_DEBUG
+                printf("Block # is smaller than 0 or bigger than the limit!\n");
+#endif
+            }
         }
+
         entry_pos=ParentInode->size%BLOCK_SIZE;  
-        strcpy(rd[ParentInode->BlockPointer[blockNO]+entry_pos], name);
-        *rd[ParentInode->BlockPointer[blockNO]+entry_pos+15] = InodeNO;
+        if (blockNO<=7 && blockNO>=0) {
+            strcpy(rd[ParentInode->BlockPointer[blockNO]+entry_pos], name);
+            *rd[ParentInode->BlockPointer[blockNO]+entry_pos+15] = InodeNO;
+        }
+        else if (blockNO>7 && blockNO<=7+64) {
+            strcpy(rd[*(ParentInode->BlockPointer[8]+blockNO-8)+entry_pos],name);
+            *rd[*(ParentInode->BlockPointer[8]+blockNO-8)+entry_pos+15]=InodeNO;
+        }
+        else if (blockNO>7+64 && blockNO<=7+64+64*64) {
+            strcpy(rd[*(*(ParentInode->BlockPointer[9])+blockNO-8)+entry_pos],name);
+            *rd[*(*(ParentInode->BlockPointer[9])+blockNO-8)+entry_pos+15]=InodeNO;
+        }
+        else{
+#ifdef UL_DEBUG
+            printf("Block # is smaller than 0 or bigger than the limit!\n");
+#endif
+        }
         ParentInode->size += 16;
         update_inode(rd, ParentInodeNO, ParentInode);
     }    
@@ -191,7 +241,6 @@ void remove_file (uint8_t* rd, int ParentInodeNO, int InodeNO, char* name)
     for (i=0;i<blockNO;i++)
         set_bitmap(rd, (Inode->BlockPointer[blockNO]-rd)/BLOCK_SIZE);
 
-
     should strcmp with all the entries in ParentInode and delete the corresponding one.
 }
 
@@ -200,3 +249,4 @@ void remove_dir (uint8_t* rd, int ParentInodeNO, int InodeNO, char* name)
     return(-1); // -1 means removal fails
 }
 
+void switch_block (uint8_t* rd, int DirInodeNO, char)
