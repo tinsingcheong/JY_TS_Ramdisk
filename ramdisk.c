@@ -82,6 +82,20 @@ int find_next_free_block(uint8_t* rd){
 	return(-1); //-1 means no empty block
 }
 
+int find_next_free_inode(uint8_t* rd){
+	int i,j;
+	uint8_t tmp;
+	for(i=0;i<INODEBITMAP_SIZE;i++){
+		tmp=rd[INODEBITMAP_BASE+i];
+		for(j=0;j<BYTELEN;j++){
+			if(tmp&0x01==0)
+				return(i*BYTELEN+j);
+			tmp=tmp>>1;
+		}
+	}
+	return(-1); //-1 means no empty inode
+}
+
 int bitmap_sum_up(uint8_t* rd){
 	int count=0;
 	int i,j;
@@ -124,7 +138,14 @@ int inode_bitmap_sum_up(uint8_t* rd){
 	return count;
 }
 
-
+void read_dir_entry(uint8_t* ptr, struct dir_entry* DirEntry){
+	int i;
+	i=0;
+	while(ptr[i] && i<14){
+		DirEntry->filename[i]=ptr[i];
+	}
+	DirEntry->InodeNo=(uint16_t)ptr[14] | ((uint16_t)ptr[15]<<BYTELEN); 
+}
 
 
 uint8_t* ramdisk_init(){
@@ -180,7 +201,7 @@ uint8_t* ramdisk_init(){
 }
 
 int search_file(uint8_t* rd, char* path){
-	int i,j;
+	int i,j,k;
 	struct path* path_list;
 	struct path* path_root;
 	struct path* path_leave;
@@ -280,16 +301,28 @@ int search_file(uint8_t* rd, char* path){
 //
 	int current_inodeid=0;//start from the root inode
 	struct inode* current_inode;
-	uint32_t current_blockid;
+	uint32_t current_direct_blockid;
+	uint32_t current_single_indirect_blockid;
+	uint32_t current_double_indirect_blockid;
 	int size_region_type;
+	struct dir_entry* current_dir_entry;
+	int find_next_level_entry=0;
+	int return_inodeNO;
 #ifdef UL_DEBUG
 	if(!(current_inode=(struct inode*)malloc(sizeof(struct inode)))){
 		fprintf(stderr,"No mem space!\n");
 		exit(-1);
 	}
+	if(!(current_dir_entry=(struct dir_entry*)malloc(sizeof(struct dir_entry)))){
+		fprintf(stderr,"No mem space!\n");
+		exit(-1);
+	}
+
+
 #endif
 
 	for(path_list=path_root->next;path_list!=NULL;path_list=path_list->next){
+		find_next_level_entry=0;
 		read_inode(rd, current_inodeid, current_inode);
 		if(current_inode->type==1 && path_list->next!=NULL){
 #ifdef UL_DEBUG
@@ -297,12 +330,12 @@ int search_file(uint8_t* rd, char* path){
 #endif
 			return -1;
 		}
+
 		/* the size of file have three regions (unit:block)
 		 * [1,8]           size_region_type=0
 		 * [9,72]          size_region_type=1
 		 * [73, 1067008]   size_region_type=2
 		 */
-		//first traverse the 8 direct block pointers
 		//determing the file size belongs to which region
 		if(current_inode->size<=8*BLOCKSIZE){
 			size_region_type=0;
@@ -313,16 +346,80 @@ int search_file(uint8_t* rd, char* path){
 		else if(current_inode->size>72*BLOCKSIZE && current_inode->size<=4168*BLOCKSIZE){
 			size_region_type=2;
 		}
-
-
-
 		
-		for(i=0;i<8;i++){
-			current_blockid=current_inodeid->BlockPointer[i];
-			for(j=0;j<128;j+=2){//128 
+		//first traverse the 8 direct block pointers
+
+		for(i=0;i<((size_region_type==0)?(current_inode->size/BLOCKSIZE+1):8);i++){
+			current_direct_blockid=current_inode->BlockPointer[i];
+			if(current_direct_blockid<261){
+				/*the first 261 blocks is taken by superblock, inodes and bitmap
+				 * Therefore, the blockid that is smaller than 261 is invalid
+				 */
+				continue;
 			}
+			for(j=0;j<16;j+=2){//every block of dir file has 16 entries
+				read_dir_entry(&rd[current_direct_blockid+j],current_dir_entry);
+				if(strcmp(current_dir_entry->filename,path_list->filename)==0){
+					find_next_level_entry=1;
+					current_inodeid=current_dir_entry->InodeNO;
+					break;
+				}				
+			}
+			if(find_next_level_entry)
+				break;
 		}
+		if(find_next_level_entry)
+			continue;
+		else if(size_region_type<1){
+			//tried all the possible entries, not found
+			return -1;
+		}
+
+		//if not found, then try the 9th single-indirect pointer
+		current_single_indirect_blockid=current_inode->BlockPointer[8];
+		for(i=0;i<((size_region_type==1)?((current_inode->size-8*BLOCKSIZE)/BLOCKSIZE+1):64);i++){
+			current_blockid=(uint32_t)(rd[current_single_indirect_blockid*BLOCKSIZE+4*i]) |
+							((uint32_t)(rd[current_single_indirect_blockid*BLOCKSIZE+4*i+1])<<BYTELEN) | 
+							((uint32_t)(rd[current_single_indirect_blockid*BLOCKSIZE+4*i+2])<<(2*BYTELEN)) | 
+							((uint32_t)(rd[current_single_indirect_blockid*BLOCKSIZE+4*i+3])<<(3*BYTELEN));
+			
+			for(j=0;j<16;j+=2){
+				read_dir_entry(&rd[current_blockid+j],current_dir_entry);
+				if(strcmp(current_dir_entry->filename,path_list->filename)==0){
+					find_next_level_entry=1;
+					current_inodeid=current_dir_entry->InodeNO;
+					break;
+				}				
+			}
+			if(find_next_level_entry)
+				break;
+		}
+		if(find_next_level_entry)
+			continue;
+		else if(size_region_type<2){
+			//tried all the possible entries, not found
+			return -1;
+		}
+
+		//if not found, then try the 10th double-indirect pointer
+		/* The 10th pointer points to a block with 64 single-indirect block pointers
+		 * Each of these single-indirect block pointers points to a block with 64 direct block pointers
+		 */
+		current_double_indirect_blockid=current_inode->BlockPointer[9];
+		int single_indirect_pointer_block_number=(current_inode->size-72*BLOCKSIZE)/(64*BLOCKSIZE);
+		for(i=0;i<single_indirect_pointer_number
+		
+
+
+
+
+
+
+
+
+
 	}
+	return current_InodeNO;
 
 }
 	
