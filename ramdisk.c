@@ -143,8 +143,20 @@ void read_dir_entry(uint8_t* ptr, struct dir_entry* DirEntry){
 	i=0;
 	while(ptr[i] && i<14){
 		DirEntry->filename[i]=ptr[i];
+		i++;
 	}
 	DirEntry->InodeNo=(uint16_t)ptr[14] | ((uint16_t)ptr[15]<<BYTELEN); 
+}
+
+void write_dir_entry(uint8_t* ptr, struct dir_entry* DirEntry){
+	int i;
+	i=0;
+	while(DirEntry->filename[i] && i<14){
+		ptr[i]=DirEntry->filename[i];
+		i++;
+	}
+	ptr[14]=(uint8_t)(DirEntry->InodeNo & 0x00ff);
+	ptr[15]=(uint8_t)(DirEntry->InodeNo>>BYTELEN);
 }
 
 
