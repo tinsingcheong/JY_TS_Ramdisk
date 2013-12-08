@@ -29,13 +29,10 @@ int get_file_size (uint8_t* rd, int InodeNO)
 {
     struct inode* Inode;
     read_inode(rd, InodeNO, Inode);
-    if (Inode->type == 1)
-        return Inode->size; // return the size of the file 
-    else
-        return(-1); // -1 means there is no such file or the file is a directory file
+    return Inode->size; // return the size of the file 
 }
 
-void create_file (uint8_t* rd, int ParentInodeNO, char* name)
+int create_file (uint8_t* rd, int ParentInodeNO, char* name)
 {
     if (strlen(name) >= 14) {
 #ifdef UL_DEBUG
@@ -81,11 +78,19 @@ void create_file (uint8_t* rd, int ParentInodeNO, char* name)
             new_block_id = find_next_free_block(rd);
             set_bitmap(rd, new_block_id);
             if (blockNO<=7 && blockNO>=0) 
-                ParentInode->BlockPointer[blockNO] = rd+new_block_id*BLOCK_SIZE;
-            else if (blockNO > 7 && blockNO <= 7+64)
-                *(ParentInode->BlockPointer[8]+blockNO-8) = rd+new_block_id*BLOCK_SIZE;
-            else if (blockNO > 7+64 && blockNO <= 7+64+64*64)
-                *(*(ParentInode->BlockPointer[9])+blockNO-8-64) = rd+new_block_id*BLOCK_SIZE;
+                ParentInode->BlockPointer[blockNO] = new_block_id;
+            else if (blockNO > 7 && blockNO <= 7+64){
+                *(ParentInode->BlockPointer[8]+(blockNO-8)*4) = (uint8_t)(new_block_id & 0x000000ff);
+                *(ParentInode->BlockPointer[8]+(blockNO-8)*4+1) = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
+                *(ParentInode->BlockPointer[8]+(blockNO-8)*4+2) = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
+                *(ParentInode->BlockPointer[8]+(blockNO-8)*4+3) = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
+            }
+            else if (blockNO > 7+64 && blockNO <= 7+64+64*64){
+                *(*(ParentInode->BlockPointer[9])+(blockNO-8-64)*4) = (uint8_t)(new_block_id & 0x000000ff);
+                *(*(ParentInode->BlockPointer[9])+(blockNO-8-64)*4+1) = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
+                *(*(ParentInode->BlockPointer[9])+(blockNO-8-64)*4+2) = (uint8_t)((new_block_id & 0x0000ff00)>>(2*BYTELEN));
+                *(*(ParentInode->BlockPointer[9])+(blockNO-8-64)*4+3) = (uint8_t)((new_block_id & 0x0000ff00)>>(3*BYTELEN));
+            }
             else{
 #ifdef UL_DEBUG
                 printf("Block # is smaller than 0 or bigger than the limit!\n");
@@ -114,12 +119,13 @@ void create_file (uint8_t* rd, int ParentInodeNO, char* name)
             
         ParentInode->size += 16;
         update_inode(rd, ParentInodeNO, ParentInode);
+        return 0;
     }    
     else
         return(-1); // -1 means creation fails
 }
 
-void create_dir (uint8_t* rd, int ParentDirInode, char* name)
+int create_dir (uint8_t* rd, int ParentDirInode, char* name)
 {
     if (strlen(name) >= 14) {
 #ifdef UL_DEBUG
@@ -164,11 +170,11 @@ void create_dir (uint8_t* rd, int ParentDirInode, char* name)
             new_block_id = find_next_free_block(rd);
             set_bitmap(rd, blockNO);
             if (blockNO<=7 && blockNO>=0) 
-                ParentInode->BlockPointer[blockNO] = rd+new_block_id*BLOCK_SIZE;
+                ParentInode->BlockPointer[blockNO] = new_block_id;
             else if (blockNO > 7 && blockNO <= 7+64)
-                *(ParentInode->BlockPointer[8]+blockNO-8) = rd+new_block_id*BLOCK_SIZE;
+                *(ParentInode->BlockPointer[8]+blockNO-8) = new_block_id;
             else if (blockNO > 7+64 && blockNO <= 7+64+64*64)
-                *(*(ParentInode->BlockPointer[9])+blockNO-8-64) = rd+new_block_id*BLOCK_SIZE;
+                *(*(ParentInode->BlockPointer[9])+blockNO-8-64) = new_block_id;
             else{
 #ifdef UL_DEBUG
                 printf("Block # is smaller than 0 or bigger than the limit!\n");
@@ -178,16 +184,16 @@ void create_dir (uint8_t* rd, int ParentDirInode, char* name)
 
         entry_pos=ParentInode->size%BLOCK_SIZE;  
         if (blockNO<=7 && blockNO>=0) {
-            strcpy(rd[ParentInode->BlockPointer[blockNO]+entry_pos], name);
-            *rd[ParentInode->BlockPointer[blockNO]+entry_pos+15] = InodeNO;
+            strcpy(rd[ParentInode->BlockPointer[blockNO]*BLOCK_SIZE+entry_pos], name);
+            *rd[ParentInode->BlockPointer[blockNO]*BLOCK_SIZE+entry_pos+15] = InodeNO;
         }
         else if (blockNO>7 && blockNO<=7+64) {
-            strcpy(rd[*(ParentInode->BlockPointer[8]+blockNO-8)+entry_pos],name);
-            *rd[*(ParentInode->BlockPointer[8]+blockNO-8)+entry_pos+15]=InodeNO;
+            strcpy(rd[*(ParentInode->BlockPointer[8]+blockNO-8)*BLOCK_SIZE+entry_pos],name);
+            *rd[*(ParentInode->BlockPointer[8]+blockNO-8)*BLOCK_SIZE+entry_pos+15]=InodeNO;
         }
         else if (blockNO>7+64 && blockNO<=7+64+64*64) {
-            strcpy(rd[*(*(ParentInode->BlockPointer[9])+blockNO-8)+entry_pos],name);
-            *rd[*(*(ParentInode->BlockPointer[9])+blockNO-8)+entry_pos+15]=InodeNO;
+            strcpy(rd[*(*(ParentInode->BlockPointer[9])+blockNO-8)*BLOCK_SIZE+entry_pos],name);
+            *rd[*(*(ParentInode->BlockPointer[9])+blockNO-8)*BLOCK_SIZE+entry_pos+15]=InodeNO;
         }
         else{
 #ifdef UL_DEBUG
@@ -196,12 +202,13 @@ void create_dir (uint8_t* rd, int ParentDirInode, char* name)
         }
         ParentInode->size += 16;
         update_inode(rd, ParentInodeNO, ParentInode);
+        return 0;
     }    
     else
         exit(-1); // -1 means creation fails
 }
 
-void remove_file (uint8_t* rd, int ParentInodeNO, int InodeNO, char* name)
+int remove_file (uint8_t* rd, int ParentInodeNO, int InodeNO, char* name)
 {
     if (strlen(name) >= 14) {
 #ifdef UL_DEBUG
@@ -234,17 +241,21 @@ void remove_file (uint8_t* rd, int ParentInodeNO, int InodeNO, char* name)
     
     double temp = Inode->size/BLOCK_SIZE;
     if (temp - (int)temp > 0)
-        blockNO = (int)temp+1;
-    else 
         blockNO = (int)temp;
+    else 
+        blockNO = (int)temp-1;
 
     for (i=0;i<blockNO;i++)
-        set_bitmap(rd, (Inode->BlockPointer[blockNO]-rd)/BLOCK_SIZE);
+    {
+        if (i>=0 && i<=7)
+            clr_bitmap(rd, Inode->BlockPointer[i]);
+        else if (i>7 && i<=7+64)
+            clr_bitmap(rd, &Inode);
 
     should strcmp with all the entries in ParentInode and delete the corresponding one.
 }
 
-void remove_dir (uint8_t* rd, int ParentInodeNO, int InodeNO, char* name)
+int remove_dir (uint8_t* rd, int ParentInodeNO, int InodeNO, char* name)
 {
     return(-1); // -1 means removal fails
 }
