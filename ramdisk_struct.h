@@ -19,6 +19,7 @@ struct path{
 
 struct dir_entry{
 	char filename[14];
-	uint16_t InodeNp
+	uint16_t InodeNp;
+}
 #endif
 
