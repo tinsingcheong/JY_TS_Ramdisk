@@ -308,6 +308,8 @@ int search_file(uint8_t* rd, char* path){
 	struct dir_entry* current_dir_entry;
 	int find_next_level_entry=0;
 	int return_inodeNO;
+	int single_indirect_pointer_block_number;
+	int direct_pointer_block_number;
 #ifdef UL_DEBUG
 	if(!(current_inode=(struct inode*)malloc(sizeof(struct inode)))){
 		fprintf(stderr,"No mem space!\n");
@@ -358,7 +360,7 @@ int search_file(uint8_t* rd, char* path){
 				continue;
 			}
 			for(j=0;j<16;j+=2){//every block of dir file has 16 entries
-				read_dir_entry(&rd[current_direct_blockid+j],current_dir_entry);
+				read_dir_entry(&rd[current_direct_blockid*BLOCKSIZE+j],current_dir_entry);
 				if(strcmp(current_dir_entry->filename,path_list->filename)==0){
 					find_next_level_entry=1;
 					current_inodeid=current_dir_entry->InodeNO;
@@ -384,7 +386,7 @@ int search_file(uint8_t* rd, char* path){
 							((uint32_t)(rd[current_single_indirect_blockid*BLOCKSIZE+4*i+3])<<(3*BYTELEN));
 			
 			for(j=0;j<16;j+=2){
-				read_dir_entry(&rd[current_blockid+j],current_dir_entry);
+				read_dir_entry(&rd[current_blockid*BLOCKSIZE+j],current_dir_entry);
 				if(strcmp(current_dir_entry->filename,path_list->filename)==0){
 					find_next_level_entry=1;
 					current_inodeid=current_dir_entry->InodeNO;
@@ -406,20 +408,43 @@ int search_file(uint8_t* rd, char* path){
 		 * Each of these single-indirect block pointers points to a block with 64 direct block pointers
 		 */
 		current_double_indirect_blockid=current_inode->BlockPointer[9];
-		int single_indirect_pointer_block_number=(current_inode->size-72*BLOCKSIZE)/(64*BLOCKSIZE);
-		for(i=0;i<single_indirect_pointer_number
-		
+		single_indirect_pointer_block_number=(current_inode->size-72*BLOCKSIZE)/(64*BLOCKSIZE)+1;
 
+		for(i=0;i<single_indirect_pointer_number;i++){
+			current_single_indirect_blockid=(uint32_t)(rd[current_double_indirect_blockid*BLOCKSIZE+4*i]) |
+							((uint32_t)(rd[current_double_indirect_blockid*BLOCKSIZE+4*i+1])<<BYTELEN) | 
+							((uint32_t)(rd[current_double_indirect_blockid*BLOCKSIZE+4*i+2])<<(2*BYTELEN)) | 
+							((uint32_t)(rd[current_double_indirect_blockid*BLOCKSIZE+4*i+3])<<(3*BYTELEN));
+			direct_pointer_block_number=((i==single_indirect_pointer_number-1)?(((current_inode->size-72*BLOCKSIZE)%(64*BLOCKSIZE))/BLOCKSIZE+1):64);
+			for(j=0;j<direct_pointer_block_number;j++){
+				current_blockid=(uint32_t)(rd[current_single_indirect_blockid*BLOCKSIZE+4*j]) |
+								((uint32_t)(rd[current_single_indirect_blockid*BLOCKSIZE+4*j+1])<<BYTELEN) | 
+								((uint32_t)(rd[current_single_indirect_blockid*BLOCKSIZE+4*j+2])<<(2*BYTELEN)) | 
+								((uint32_t)(rd[current_single_indirect_blockid*BLOCKSIZE+4*j+3])<<(3*BYTELEN));
+	
+				for(k=0;k<16;k+=2){
+					read_dir_entry(&rd[current_blockid*BLOCKSIZE+k],current_dir_entry);
+					if(strcmp(current_dir_entry->filename,path_list->filename)==0){
+						find_next_level_entry=1;
+						current_inodeid=current_dir_entry->InodeNO;
+						break;
+					}
+				}
+				if(find_next_level_entry)
+					break;
+			}
+			if(find_next_level_entry)
+				break;
+		}
 
-
-
-
-
-
-
+		if(find_next_level_entry)
+			continue;
+		else{
+			return -1;
+		}
 
 	}
-	return current_InodeNO;
+	return current_Inodeid;
 
 }
 	
