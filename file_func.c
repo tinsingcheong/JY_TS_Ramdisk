@@ -309,7 +309,7 @@ int remove_file (uint8_t* rd, int ParentInodeNO, int InodeNO, char* name)
             clr_bitmap(rd, *(*(Inode->BlockPointer[9]+(i-(8+64)*4/64))+((i-(8+64))%64)*4));
     }
 
-    should strcmp with all the entries in ParentInode and delete the corresponding one.
+    //should strcmp with all the entries in ParentInode and delete the corresponding one.
 }
 
 int remove_dir (uint8_t* rd, int ParentInodeNO, int InodeNO, char* name)
@@ -317,4 +317,4 @@ int remove_dir (uint8_t* rd, int ParentInodeNO, int InodeNO, char* name)
     return(-1); // -1 means removal fails
 }
 
-void switch_block (uint8_t* rd, int DirInodeNO, char)
+//void switch_block (uint8_t* rd, int DirInodeNO, char)
