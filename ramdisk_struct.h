@@ -1,5 +1,6 @@
 #ifndef RAMDISK_STRUCT_H
 #define RAMDISK_STRUCT_H
+#include<stdint.h>
 struct super_block{
 	uint16_t FreeBlockNum;
 	uint16_t FreeInodeNum;
