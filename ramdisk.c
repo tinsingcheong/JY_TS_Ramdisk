@@ -88,7 +88,7 @@ int find_next_free_block(uint8_t* rd){
 	for(i=0;i<BITMAP_SIZE;i++){
 		tmp=rd[BITMAP_BASE+i];
 		for(j=0;j<BYTELEN;j++){
-			if(tmp&0x01==0)
+			if((tmp&0x01)==0)
 				return(i*BYTELEN+j);
 			tmp=tmp>>1;
 		}
@@ -331,6 +331,13 @@ int search_file(uint8_t* rd, char* path){
 
 		strcpy(path_leave->filename,tmp);
 	}
+
+#ifdef UL_DEBUG
+	printf("Path list printing...\n");
+	for(path_list=path_root;path_list!=NULL;path_list=path_list->next){
+		printf("%s\n",path_list->filename);
+	}
+#endif
 
 // the path list is started with path_root and ended with path_leave
 //
