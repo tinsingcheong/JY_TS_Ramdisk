@@ -20,6 +20,18 @@ void update_superblock(uint8_t* rd, struct super_block* SuperBlock){
 	}
 }
 
+void partial_update_superblock(uint8_t* rd){ 
+	//partially update superblock just freeblocknum and free inode number
+	
+	int FreeBlockNum=BLOCK_NUM-bitmap_sum_up(rd);
+	int FreeInodeNum=INODE_NUM-inode_bitmap_sum_up(rd);
+	rd[SUPERBLOCK_BASE]=(uint8_t)(FreeBlockNum & 0x00ff);
+	rd[SUPERBLOCK_BASE+1]=(uint8_t)(FreeBlockNum>>BYTELEN);
+	rd[SUPERBLOCK_BASE+2]=(uint8_t)(FreeInodeNum & 0x00ff);
+	rd[SUPERBLOCK_BASE+3]=(uint8_t)(FreeInodeNum>>BYTELEN);
+
+}
+
 void read_superblock(uint8_t* rd, struct super_block* SuperBlock){
 	int i;
 	SuperBlock->FreeBlockNum=(((uint16_t)rd[SUPERBLOCK_BASE+1])<<BYTELEN) | (uint16_t)rd[SUPERBLOCK_BASE];
@@ -89,8 +101,15 @@ int find_next_free_inode(uint8_t* rd){
 	uint8_t tmp;
 	for(i=0;i<INODEBITMAP_SIZE;i++){
 		tmp=rd[INODEBITMAP_BASE+i];
+#ifdef UL_DEBUG
+		//printf("Bitmap of inode %dth byte is %x\n",i, tmp);
+#endif
 		for(j=0;j<BYTELEN;j++){
-			if(tmp&0x01==0)
+#ifdef UL_DEBUG
+		//	printf("tmp=%x, tmp&0x01=%d\n",tmp,tmp&0x01);
+		//	sleep(1);
+#endif
+			if((tmp&0x01)==0)
 				return(i*BYTELEN+j);
 			tmp=tmp>>1;
 		}

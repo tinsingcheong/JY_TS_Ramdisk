@@ -11,6 +11,7 @@
 #endif
 
 void update_superblock(uint8_t* rd, struct super_block* SuperBlock);
+void partial_update_superblock(uint8_t* rd);
 void read_superblock(uint8_t* rd, struct super_block* SuperBlock);
 void update_inode(uint8_t* rd, int NodeNO, struct inode* Inode);
 
