@@ -91,28 +91,31 @@ int create_file (uint8_t* rd, int ParentInodeNO, char* name)
                 if (blockNO == 8) {
                     new_entry_block_id = find_next_free_block(rd); 
                     set_bitmap(rd, new_entry_block_id);
-                    ParentInode->BlockPointer[8]=rd+new_entry_block_id*BLOCK_SIZE;
+                    ParentInode->BlockPointer[8]=new_entry_block_id;
                 }
-                *(ParentInode->BlockPointer[8]+(blockNO-8)*4) = (uint8_t)(new_block_id & 0x000000ff);
-                *(ParentInode->BlockPointer[8]+(blockNO-8)*4+1) = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
-                *(ParentInode->BlockPointer[8]+(blockNO-8)*4+2) = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
-                *(ParentInode->BlockPointer[8]+(blockNO-8)*4+3) = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
+                rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4] = (uint8_t)(new_block_id & 0x000000ff);
+                rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
+                rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
+                rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
             }
             else if (blockNO > 7+64 && blockNO <= 7+64+64*64){
                 if (blockNO == 8+64) {
                     new_entry_table_block_id = find_next_free_block(rd);
                     set_bitmap(rd, new_entry_table_block_id);
-                    ParentInode->BlockPointer[9]=rd+new_entry_table_block_id*BLOCK_SIZE;
+                    ParentInode->BlockPointer[9]=new_entry_table_block_id;
                 }
                 if ((blockNO-(8+64))%64 == 0) {// Need a new block for second indirect entry table
                     new_entry_block_id = find_next_free_block(rd);
                     set_bitmap(rd, new_entry_block_id);
-                    *(ParentInode->BlockPointer[9]+(uint32_t)(blockNO-(8+64))*4/64)=rd+new_entry_block_id*BLOCK_SIZE;
+                    rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]=(uint8_t)(new_entry_block_id & 0x000000ff);
+                    rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64+1]=(uint8_t)((new_entry_block_id & 0x0000ff00)>>BYTELEN);
+                    rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64+2]=(uint8_t)((new_entry_block_id & 0x00ff0000)>>(2*BYTELEN));
+                    rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64+3]=(uint8_t)((new_entry_block_id & 0xff000000)>>(3*BYTELEN));
                 }
-                *(*(ParentInode->BlockPointer[9]+(uint32_t)(blockNO-(8+64))*4/64)+((blockNO-8-64)%64)*4) = (uint8_t)(new_block_id & 0x000000ff);
-                *(*(ParentInode->BlockPointer[9]+(uint32_t)(blockNO-(8+64))*4/64)+((blockNO-8-64)%64)*4+1) = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
-                *(*(ParentInode->BlockPointer[9]+(uint32_t)(blockNO-(8+64))*4/64)+((blockNO-8-64)%64)*4+2) = (uint8_t)((new_block_id & 0x0000ff00)>>(2*BYTELEN));
-                *(*(ParentInode->BlockPointer[9]+(uint32_t)(blockNO-(8+64))*4/64)+((blockNO-8-64)%64)*4+3) = (uint8_t)((new_block_id & 0x0000ff00)>>(3*BYTELEN));
+                rd[(uint32_t)rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*BLOCK_SIZE+((blockNO-8-64)%64)*4] = (uint8_t)(new_block_id & 0x000000ff);
+                rd[(uint32_t)rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*BLOCK_SIZE+((blockNO-8-64)%64)*4+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
+                rd[(uint32_t)rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*BLOCK_SIZE+((blockNO-8-64)%64)*4+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
+                rd[(uint32_t)rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*BLOCK_SIZE+((blockNO-8-64)%64)*4+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
             }
             else{
 #ifdef UL_DEBUG
@@ -125,13 +128,13 @@ int create_file (uint8_t* rd, int ParentInodeNO, char* name)
         NewDirEntry->filename = name;
         NewDirEntry->InodeNo = InodeNO;
         if (blockNO<=7 && blockNO>=0) {
-            write_dir_entry(rd[ParentInode->BlockPointer[blockNO]*BLOCK_SIZE+entry_pos], NewDirEntry);
+            write_dir_entry(&rd[ParentInode->BlockPointer[blockNO]*BLOCK_SIZE+entry_pos], NewDirEntry);
         }
         else if (blockNO>7 && blockNO<=7+64) {
-            write_dir_entry(rd[*(ParentInode->BlockPointer[8]+(blockNO-8)*4)*BLOCK_SIZE+entry_pos], NewDirEntry);
+            write_dir_entry(&rd[rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4]*BLOCK_SIZE+entry_pos], NewDirEntry);
         }
         else if (blockNO>7+64 && blockNO<=7+64+64*64) {
-            write_dir_entry(rd[*(*(ParentInode->BlockPointer[9])+(blockNO-8)*4)*BLOCK_SIZE+entry_pos], NewDirEntry);
+            write_dir_entry(&rd[rd[rd[ParentInode->BlockPointer[9]*BLOCK_SIZE]+(blockNO-8)*4]*BLOCK_SIZE+entry_pos], NewDirEntry);
         }
         else{
 #ifdef UL_DEBUG
@@ -155,7 +158,7 @@ int create_dir (uint8_t* rd, int ParentDirInode, char* name)
 #endif
         return(-1);
     }
-    struct superblock* SuperBlock;
+    struct super_block* SuperBlock;
     struct inode* ParentInode;
     struct inode* Inode;
     struct dir_entry* NewDirEntry;
@@ -166,7 +169,7 @@ int create_dir (uint8_t* rd, int ParentDirInode, char* name)
     int new_entry_table_block_id;
     uint8_t entry_pos;
     
-	if(!(SuperBlock=(struct superblock*)malloc(sizeof(struct superblock)))){
+	if(!(SuperBlock=(struct super_block*)malloc(sizeof(struct super_block)))){
 		fprintf(stderr,"No mem space!\n");
 		exit(-1);
 	}
@@ -205,28 +208,31 @@ int create_dir (uint8_t* rd, int ParentDirInode, char* name)
                 if (blockNO == 8) {
                     new_entry_block_id = find_next_free_block(rd); 
                     set_bitmap(rd, new_entry_block_id);
-                    ParentInode->BlockPointer[8]=rd+new_entry_block_id*BLOCK_SIZE;
+                    ParentInode->BlockPointer[8]=new_entry_block_id;
                 }
-                *(ParentInode->BlockPointer[8]+(blockNO-8)*4) = (uint8_t)(new_block_id & 0x000000ff);
-                *(ParentInode->BlockPointer[8]+(blockNO-8)*4+1) = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
-                *(ParentInode->BlockPointer[8]+(blockNO-8)*4+2) = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
-                *(ParentInode->BlockPointer[8]+(blockNO-8)*4+3) = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
+                rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4] = (uint8_t)(new_block_id & 0x000000ff);
+                rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
+                rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
+                rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
             }
             else if (blockNO > 7+64 && blockNO <= 7+64+64*64){
                 if (blockNO == 8+64) {
                     new_entry_table_block_id = find_next_free_block(rd);
                     set_bitmap(rd, new_entry_table_block_id);
-                    ParentInode->BlockPointer[9]=rd+new_entry_table_block_id*BLOCK_SIZE;
+                    ParentInode->BlockPointer[9]=new_entry_table_block_id;
                 }
                 if ((blockNO-(8+64))%64 == 0) {// Need a new block for second indirect entry table
                     new_entry_block_id = find_next_free_block(rd);
                     set_bitmap(rd, new_entry_block_id);
-                    *(ParentInode->BlockPointer[9]+(uint32_t)(blockNO-(8+64))*4/64)=rd+new_entry_block_id*BLOCK_SIZE;
+                    rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]=(uint8_t)(new_entry_block_id & 0x000000ff);
+                    rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64+1]=(uint8_t)((new_entry_block_id & 0x0000ff00)>>BYTELEN);
+                    rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64+2]=(uint8_t)((new_entry_block_id & 0x00ff0000)>>(2*BYTELEN));
+                    rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64+3]=(uint8_t)((new_entry_block_id & 0xff000000)>>(3*BYTELEN));
                 }
-                *(*(ParentInode->BlockPointer[9]+(uint32_t)(blockNO-(8+64))*4/64)+((blockNO-8-64)%64)*4) = (uint8_t)(new_block_id & 0x000000ff);
-                *(*(ParentInode->BlockPointer[9]+(uint32_t)(blockNO-(8+64))*4/64)+((blockNO-8-64)%64)*4+1) = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
-                *(*(ParentInode->BlockPointer[9]+(uint32_t)(blockNO-(8+64))*4/64)+((blockNO-8-64)%64)*4+2) = (uint8_t)((new_block_id & 0x0000ff00)>>(2*BYTELEN));
-                *(*(ParentInode->BlockPointer[9]+(uint32_t)(blockNO-(8+64))*4/64)+((blockNO-8-64)%64)*4+3) = (uint8_t)((new_block_id & 0x0000ff00)>>(3*BYTELEN));
+                rd[(uint32_t)rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*BLOCK_SIZE+((blockNO-8-64)%64)*4] = (uint8_t)(new_block_id & 0x000000ff);
+                rd[(uint32_t)rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*BLOCK_SIZE+((blockNO-8-64)%64)*4+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
+                rd[(uint32_t)rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*BLOCK_SIZE+((blockNO-8-64)%64)*4+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
+                rd[(uint32_t)rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*BLOCK_SIZE+((blockNO-8-64)%64)*4+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
             }
             else{
 #ifdef UL_DEBUG
@@ -239,13 +245,13 @@ int create_dir (uint8_t* rd, int ParentDirInode, char* name)
         NewDirEntry->filename = name;
         NewDirEntry->InodeNo = InodeNO;
         if (blockNO<=7 && blockNO>=0) {
-            write_dir_entry(rd[ParentInode->BlockPointer[blockNO]*BLOCK_SIZE+entry_pos], NewDirEntry);
+            write_dir_entry(&rd[ParentInode->BlockPointer[blockNO]*BLOCK_SIZE+entry_pos], NewDirEntry);
         }
         else if (blockNO>7 && blockNO<=7+64) {
-            write_dir_entry(rd[*(ParentInode->BlockPointer[8]+(blockNO-8)*4)*BLOCK_SIZE+entry_pos], NewDirEntry);
+            write_dir_entry(&rd[rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4]*BLOCK_SIZE+entry_pos], NewDirEntry);
         }
         else if (blockNO>7+64 && blockNO<=7+64+64*64) {
-            write_dir_entry(rd[*(*(ParentInode->BlockPointer[9])+(blockNO-8)*4)*BLOCK_SIZE+entry_pos], NewDirEntry);
+            write_dir_entry(&rd[rd[rd[ParentInode->BlockPointer[9]*BLOCK_SIZE]+(blockNO-8)*4]*BLOCK_SIZE+entry_pos], NewDirEntry);
         }
         else{
 #ifdef UL_DEBUG
