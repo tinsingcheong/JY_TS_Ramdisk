@@ -1,5 +1,5 @@
 #include "constant.h"
-#include "user_struct.h"
+//#include "user_struct.h"
 #include "ramdisk.h"
 
 #define UL_DEBUG
@@ -41,7 +41,7 @@ int create_file (uint8_t* rd, int ParentInodeNO, char* name)
 #endif
         return(-1);
     }
-    struct superblock* SuperBlock;
+    struct super_block* SuperBlock;
     struct inode* ParentInode;
     struct inode* Inode;
     struct dir_entry* NewDirEntry;
@@ -52,7 +52,7 @@ int create_file (uint8_t* rd, int ParentInodeNO, char* name)
     int new_entry_table_block_id;
     uint8_t entry_pos;
     
-	if(!(SuperBlock=(struct superblock*)malloc(sizeof(struct superblock)))){
+	if(!(SuperBlock=(struct super_block*)malloc(sizeof(struct super_block)))){
 		fprintf(stderr,"No mem space!\n");
 		exit(-1);
 	}
