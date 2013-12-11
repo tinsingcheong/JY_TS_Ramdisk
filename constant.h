@@ -17,5 +17,7 @@
 #define BYTELEN            8
 #define BLOCK_SIZE         256
 #define BLOCK_NUM          8192
+// Defined by Sean
+#define ENTRY_SIZE         16
 #endif
 

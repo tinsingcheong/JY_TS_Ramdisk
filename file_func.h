@@ -8,5 +8,5 @@ int create_file (uint8_t* rd, int ParentInodeNO, char* name);
 int create_dir (uint8_t* rd, int ParentDirInode, char* name);
 int remove_file (uint8_t* rd, int ParentInodeNO, int InodeNO, char* name);
 int remove_dir (uint8_t* rd, int ParentInodeNO, int InodeNO, char* name);
-void switch_block (uint8_t* rd, int DirInodeNO, char);
+int delete_dir_entry(uint8_t* rd, struct inode* Inode, int delete_blockNO);
 #endif
