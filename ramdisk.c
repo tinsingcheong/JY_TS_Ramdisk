@@ -1,5 +1,6 @@
 #include "ramdisk_struct.h"
 #include "constant.h"
+#include "ramdisk.h"
 #define UL_DEBUG //for user level debugging
 
 #ifdef UL_DEBUG
@@ -41,7 +42,7 @@ void read_superblock(uint8_t* rd, struct super_block* SuperBlock){
 	}
 }
 
-void update_inode(uint8_t* rd, int NodeNO, struct inode* Inode){
+void update_inode(uint8_t* rd, uint16_t NodeNO, struct inode* Inode){
 	int i;
 	rd[INODE_BASE+NodeNO*64]=Inode->type;
 	rd[INODE_BASE+NodeNO*64+1]=(uint8_t)(Inode->size & 0x000000ff);
@@ -56,7 +57,7 @@ void update_inode(uint8_t* rd, int NodeNO, struct inode* Inode){
 	}
 }
 
-void read_inode(uint8_t* rd, int NodeNO, struct inode* Inode){
+void read_inode(uint8_t* rd, uint16_t NodeNO, struct inode* Inode){
 	int i;
 	Inode->type=rd[INODE_BASE+NodeNO*64];
 	Inode->size=(uint32_t)(rd[INODE_BASE+NodeNO*64+1]) | ((uint32_t)(rd[INODE_BASE+NodeNO*64+2])<<BYTELEN) |
@@ -96,7 +97,7 @@ int find_next_free_block(uint8_t* rd){
 	return(-1); //-1 means no empty block
 }
 
-int find_next_free_inode(uint8_t* rd){
+uint16_t find_next_free_inode(uint8_t* rd){
 	int i,j;
 	uint8_t tmp;
 	for(i=0;i<INODEBITMAP_SIZE;i++){
@@ -132,14 +133,14 @@ int bitmap_sum_up(uint8_t* rd){
 	return count;
 }
 
-void set_inode_bitmap(uint8_t* rd, int InodeNO){
+void set_inode_bitmap(uint8_t* rd, uint16_t InodeNO){
 	int byte_location=InodeNO/BYTELEN;
 	uint8_t set=1;
 	set=set<<(InodeNO & 0x00000007);
 	rd[INODEBITMAP_BASE+byte_location]|=set;
 }
 
-void clr_inode_bitmap(uint8_t* rd, int InodeNO){
+void clr_inode_bitmap(uint8_t* rd, uint16_t InodeNO){
 	int byte_location=InodeNO/BYTELEN;
 	uint8_t clr=1;
 	clr=clr<<(InodeNO & 0x00000007); 
@@ -416,6 +417,9 @@ int search_file(uint8_t* rd, char* path){
 			continue;
 		else if(size_region_type<1){
 			//tried all the possible entries, not found
+#ifdef UL_DEBUG
+			printf("File not found in the first 8 blocks\n");
+#endif
 			return -1;
 		}
 
@@ -442,6 +446,9 @@ int search_file(uint8_t* rd, char* path){
 			continue;
 		else if(size_region_type<2){
 			//tried all the possible entries, not found
+#ifdef UL_DEBUG
+			printf("File not found in the 9th blocks\n");
+#endif
 			return -1;
 		}
 
@@ -482,6 +489,9 @@ int search_file(uint8_t* rd, char* path){
 		if(find_next_level_entry)
 			continue;
 		else{
+#ifdef UL_DEBUG
+			printf("File not found in the 10th blocks\n");
+#endif
 			return -1;
 		}
 

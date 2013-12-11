@@ -13,15 +13,16 @@
 void update_superblock(uint8_t* rd, struct super_block* SuperBlock);
 void partial_update_superblock(uint8_t* rd);
 void read_superblock(uint8_t* rd, struct super_block* SuperBlock);
-void update_inode(uint8_t* rd, int NodeNO, struct inode* Inode);
+void update_inode(uint8_t* rd, uint16_t NodeNO, struct inode* Inode);
 
-void read_inode(uint8_t* rd, int NodeNO, struct inode* Inode);
+void read_inode(uint8_t* rd, uint16_t NodeNO, struct inode* Inode);
 void set_bitmap(uint8_t* rd, int BlockNO);
+void clr_bitmap(uint8_t* rd, int BlockNO);
 int find_next_free_block(uint8_t* rd);
-int find_next_free_inode(uint8_t* rd);
+uint16_t find_next_free_inode(uint8_t* rd);
 int bitmap_sum_up(uint8_t* rd);
-void set_inode_bitmap(uint8_t* rd, int InodeNO);
-void clr_inode_bitmap(uint8_t* rd, int InodeNO);
+void set_inode_bitmap(uint8_t* rd, uint16_t InodeNO);
+void clr_inode_bitmap(uint8_t* rd, uint16_t InodeNO);
 int inode_bitmap_sum_up(uint8_t* rd);
 void read_dir_entry(uint8_t* ptr, struct dir_entry* DirEntry);
 void write_dir_entry(uint8_t* ptr, struct dir_entry* DirEntry);
