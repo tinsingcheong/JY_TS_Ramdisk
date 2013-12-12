@@ -1,0 +1,11 @@
+main: Ts_main.o ramdisk.o file_func.o
+	gcc -o main Ts_main.o ramdisk.o file_func.o
+Ts_main.o: Ts_main.c ramdisk.h
+	gcc -c Ts_main.c
+ramdisk.o: ramdisk.c ramdisk_struct.h constant.h
+	gcc -c ramdisk.c
+file_func.o: file_func.c ramdisk.h constant.h
+	gcc -c file_func.c
+
+clean:
+	rm *.o main
