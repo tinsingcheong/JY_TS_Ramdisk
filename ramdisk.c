@@ -402,8 +402,11 @@ int search_file(uint8_t* rd, char* path){
 				 */
 				continue;
 			}
-			for(j=0;j<16;j+=2){//every block of dir file has 16 entries
-				read_dir_entry(&rd[current_direct_blockid*BLOCK_SIZE+j],current_dir_entry);
+			for(j=0;j<16;j++){//every block of dir file has 16 entries
+				read_dir_entry(&rd[current_direct_blockid*BLOCK_SIZE+j*16],current_dir_entry);
+#ifdef UL_DEBUG
+				printf("i=%d, j=%d, %s, %s, \n", i,j,current_dir_entry->filename,path_list->filename);
+#endif
 				if(strcmp(current_dir_entry->filename,path_list->filename)==0){
 					find_next_level_entry=1;
 					current_inodeid=current_dir_entry->InodeNo;
@@ -431,8 +434,8 @@ int search_file(uint8_t* rd, char* path){
 							((uint32_t)(rd[current_single_indirect_blockid*BLOCK_SIZE+4*i+2])<<(2*BYTELEN)) | 
 							((uint32_t)(rd[current_single_indirect_blockid*BLOCK_SIZE+4*i+3])<<(3*BYTELEN));
 			
-			for(j=0;j<16;j+=2){
-				read_dir_entry(&rd[current_direct_blockid*BLOCK_SIZE+j],current_dir_entry);
+			for(j=0;j<16;j++){
+				read_dir_entry(&rd[current_direct_blockid*BLOCK_SIZE+j*16],current_dir_entry);
 				if(strcmp(current_dir_entry->filename,path_list->filename)==0){
 					find_next_level_entry=1;
 					current_inodeid=current_dir_entry->InodeNo;
@@ -471,8 +474,8 @@ int search_file(uint8_t* rd, char* path){
 								((uint32_t)(rd[current_single_indirect_blockid*BLOCK_SIZE+4*j+2])<<(2*BYTELEN)) | 
 								((uint32_t)(rd[current_single_indirect_blockid*BLOCK_SIZE+4*j+3])<<(3*BYTELEN));
 	
-				for(k=0;k<16;k+=2){
-					read_dir_entry(&rd[current_direct_blockid*BLOCK_SIZE+k],current_dir_entry);
+				for(k=0;k<16;k++){
+					read_dir_entry(&rd[current_direct_blockid*BLOCK_SIZE+k*16],current_dir_entry);
 					if(strcmp(current_dir_entry->filename,path_list->filename)==0){
 						find_next_level_entry=1;
 						current_inodeid=current_dir_entry->InodeNo;
