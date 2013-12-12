@@ -92,7 +92,7 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
             new_block_flag = 0;
         }
         else if (temp-(int)temp == 0) { // if the current blocks are filled up
-            blockNO = (int)temp+1;
+            blockNO = (int)temp;
             new_block_id = find_next_free_block(rd);
             set_bitmap(rd, new_block_id);
             new_block_flag = 1;
