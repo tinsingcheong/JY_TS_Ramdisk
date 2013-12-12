@@ -220,10 +220,12 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 #endif
         }
         else if (blockNO>7+64 && blockNO<=7+64+64*64) {
+	//This situation won't happen because the max number of file is 1024, the inodes 9th block (the single indirect block is able to cover 1024 files
+/*
             write_dir_entry(&rd[rd[rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(blockNO-(8+64))*4/64]+((blockNO-(8+64))%64)*4]*BLOCK_SIZE+entry_pos], NewDirEntry);
 #ifdef UL_DEBUG
                 printf("Entry is registered in the 10th block\n");
-#endif
+#endif*/
         }
         else{
 #ifdef UL_DEBUG
@@ -234,7 +236,7 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         ParentInode->size += 16;
         update_inode(rd, ParentInodeNO, ParentInode);
 #ifdef UL_DEBUG
-        printf("Update: ParentInode size is      %d.\n", ParentInode->size);
+        printf("Update: ParentInode size is %d.\n", ParentInode->size);
 #endif
 		partial_update_superblock(rd);
         return 0;
@@ -289,7 +291,7 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         printf("Acquired Inode is %u.\n", InodeNO);
 #endif
         set_inode_bitmap(rd, InodeNO);
-        Inode->type = (uint8_t) 0x0; // Initialize the type as directory file
+        Inode->type = (uint8_t) 0x0; // Initialize the type as regular file
         Inode->size = (uint32_t) 0x0; // Initialize the size as 0
         update_inode(rd, InodeNO, Inode); // Update the new Inode
         // Update the Parent Inode information
@@ -303,7 +305,7 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
             new_block_flag = 0;
         }
         else if (temp-(int)temp == 0) { // if the current blocks are filled up
-            blockNO = (int)temp+1;
+            blockNO = (int)temp;
             new_block_id = find_next_free_block(rd);
             set_bitmap(rd, new_block_id);
             new_block_flag = 1;
@@ -324,6 +326,9 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         else if (blockNO > 7 && blockNO <= 7+64){
             if (new_block_flag == 1) {
                 if (blockNO == 8) { // Need to initiate the 9th block in the parent dir
+#ifdef UL_DEBUG
+            printf("I'm here!\n");
+#endif
                     new_entry_block_id = find_next_free_block(rd); 
                     set_bitmap(rd, new_entry_block_id);
                     ParentInode->BlockPointer[8]=new_entry_block_id;
@@ -414,16 +419,25 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 #endif
         }
         else if (blockNO>7 && blockNO<=7+64) {
-            write_dir_entry(&rd[rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4]*BLOCK_SIZE+entry_pos], NewDirEntry);
+         //   write_dir_entry(&rd[rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4]*BLOCK_SIZE+entry_pos], NewDirEntry);
+			write_dir_entry(&rd[(*((uint32_t*)(rd+ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4)))*BLOCK_SIZE+entry_pos], NewDirEntry);
+
 #ifdef UL_DEBUG
                 printf("Entry is registered in the 9th block\n");
+				printf("The block is %d\n",(*((uint32_t*)(rd+ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4))));
+                for ( k = 0; k <=13; k++){
+                    printf("%c", rd[(*((uint32_t*)(rd+ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4)))*BLOCK_SIZE+entry_pos+k]);
+                    (k==13)?(printf("\n")):(printf(""));
+                }
 #endif
         }
         else if (blockNO>7+64 && blockNO<=7+64+64*64) {
+	//This situation won't happen because the max number of file is 1024, the inodes 9th block (the single indirect block is able to cover 1024 files
+/*
             write_dir_entry(&rd[rd[rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(blockNO-(8+64))*4/64]+((blockNO-(8+64))%64)*4]*BLOCK_SIZE+entry_pos], NewDirEntry);
 #ifdef UL_DEBUG
                 printf("Entry is registered in the 10th block\n");
-#endif
+#endif*/
         }
         else{
 #ifdef UL_DEBUG
@@ -434,10 +448,9 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         ParentInode->size += 16;
         update_inode(rd, ParentInodeNO, ParentInode);
 #ifdef UL_DEBUG
-        printf("Update: ParentInode size is     %d.\n", ParentInode->size);
+        printf("Update: ParentInode size is %d.\n", ParentInode->size);
 #endif
 		partial_update_superblock(rd);
-
         return 0;
     }    
     else
