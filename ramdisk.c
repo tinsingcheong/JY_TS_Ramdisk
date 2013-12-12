@@ -165,6 +165,7 @@ int inode_bitmap_sum_up(uint8_t* rd){
 void read_dir_entry(uint8_t* ptr, struct dir_entry* DirEntry){
 	int i;
 	i=0;
+	memset(DirEntry,0,14);
 	while(ptr[i] && i<14){
 		DirEntry->filename[i]=ptr[i];
 		i++;
@@ -402,10 +403,15 @@ int search_file(uint8_t* rd, char* path){
 				 */
 				continue;
 			}
+#ifdef UL_DEBUG
+		//	printf("the direct block id is %d\n",current_direct_blockid);
+		//	fflush(stdout);
+#endif
+
 			for(j=0;j<16;j++){//every block of dir file has 16 entries
 				read_dir_entry(&rd[current_direct_blockid*BLOCK_SIZE+j*16],current_dir_entry);
 #ifdef UL_DEBUG
-		//		printf("i=%d, j=%d, %s, %d ,%s \n", i,j,current_dir_entry->filename,current_dir_entry->InodeNo,path_list->filename );
+	//			printf("i=%d, j=%d, %s, %d ,%s \n", i,j,current_dir_entry->filename,current_dir_entry->InodeNo,path_list->filename );
 #endif
 				if(strcmp(current_dir_entry->filename,path_list->filename)==0){
 					find_next_level_entry=1;
@@ -428,14 +434,26 @@ int search_file(uint8_t* rd, char* path){
 
 		//if not found, then try the 9th single-indirect pointer
 		current_single_indirect_blockid=current_inode->BlockPointer[8];
+#ifdef UL_DEBUG
+	//		printf("the 9th block (single indirect block) id is %d\n",current_single_indirect_blockid);
+	//		fflush(stdout);
+#endif
+
 		for(i=0;i<((size_region_type==1)?((current_inode->size-8*BLOCK_SIZE)/BLOCK_SIZE+1):64);i++){
 			current_direct_blockid=(uint32_t)(rd[current_single_indirect_blockid*BLOCK_SIZE+4*i]) |
 							((uint32_t)(rd[current_single_indirect_blockid*BLOCK_SIZE+4*i+1])<<BYTELEN) | 
 							((uint32_t)(rd[current_single_indirect_blockid*BLOCK_SIZE+4*i+2])<<(2*BYTELEN)) | 
 							((uint32_t)(rd[current_single_indirect_blockid*BLOCK_SIZE+4*i+3])<<(3*BYTELEN));
-			
+#ifdef UL_DEBUG
+		//	printf("the direct block id is %d\n",current_direct_blockid);
+		//	fflush(stdout);
+#endif
 			for(j=0;j<16;j++){
-				read_dir_entry(&rd[current_direct_blockid*BLOCK_SIZE+j*16],current_dir_entry);
+				read_dir_entry(&rd[(current_direct_blockid)*BLOCK_SIZE+j*16],current_dir_entry);
+#ifdef UL_DEBUG
+		//		printf("i=%d, j=%d, %s, %d ,%s \n", i,j,current_dir_entry->filename,current_dir_entry->InodeNo,path_list->filename );
+#endif
+
 				if(strcmp(current_dir_entry->filename,path_list->filename)==0){
 					find_next_level_entry=1;
 					current_inodeid=current_dir_entry->InodeNo;

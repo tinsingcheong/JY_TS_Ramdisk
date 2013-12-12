@@ -207,11 +207,14 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 #endif
         }
         else if (blockNO>7 && blockNO<=7+64) {
-            write_dir_entry(&rd[rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4]*BLOCK_SIZE+entry_pos], NewDirEntry);
+         //   write_dir_entry(&rd[rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4]*BLOCK_SIZE+entry_pos], NewDirEntry);
+			write_dir_entry(&rd[(*((uint32_t*)(rd+ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4)))*BLOCK_SIZE+entry_pos], NewDirEntry);
+
 #ifdef UL_DEBUG
                 printf("Entry is registered in the 9th block\n");
+				printf("The block is %d\n",(*((uint32_t*)(rd+ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4))));
                 for ( k = 0; k <=13; k++){
-                    printf("%c", rd[rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4]*BLOCK_SIZE+entry_pos+k]);
+                    printf("%c", rd[(*((uint32_t*)(rd+ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4)))*BLOCK_SIZE+entry_pos+k]);
                     (k==13)?(printf("\n")):(printf(""));
                 }
 #endif
@@ -231,8 +234,9 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         ParentInode->size += 16;
         update_inode(rd, ParentInodeNO, ParentInode);
 #ifdef UL_DEBUG
-        printf("Update: ParentInode size is%d.\n", ParentInode->size);
+        printf("Update: ParentInode size is      %d.\n", ParentInode->size);
 #endif
+		partial_update_superblock(rd);
         return 0;
     }    
     else
@@ -430,8 +434,10 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         ParentInode->size += 16;
         update_inode(rd, ParentInodeNO, ParentInode);
 #ifdef UL_DEBUG
-        printf("Update: ParentInode size is%d.\n", ParentInode->size);
+        printf("Update: ParentInode size is     %d.\n", ParentInode->size);
 #endif
+		partial_update_superblock(rd);
+
         return 0;
     }    
     else
