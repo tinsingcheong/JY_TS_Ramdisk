@@ -5,7 +5,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-#define FILE_NUM 130
+#define FILE_NUM 1000
 int main(int argc, char* argv[]){
 	int i=0;
 	uint8_t* rd;
