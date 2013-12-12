@@ -53,6 +53,7 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
     int new_entry_table_block_id;
     uint8_t entry_pos;
     double temp;
+	int k;
     
 	if(!(SuperBlock=(struct super_block*)malloc(sizeof(struct super_block)))){
 		fprintf(stderr,"No mem space!\n");
@@ -196,7 +197,7 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
             write_dir_entry(&rd[ParentInode->BlockPointer[blockNO]*BLOCK_SIZE+entry_pos], NewDirEntry);
 #ifdef UL_DEBUG
                 printf("Entry is registered in the first 8 blocks\n");
-                for (int k = 0; k <=13; k++){
+                for ( k = 0; k <=13; k++){
                     printf("%c", rd[ParentInode->BlockPointer[blockNO]*BLOCK_SIZE+entry_pos+k]);
                     (k==13)?(printf("\n")):(printf(""));
                 }
@@ -251,6 +252,7 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
     int new_entry_table_block_id;
     uint8_t entry_pos;
     double temp;
+	int k;
     
 	if(!(SuperBlock=(struct super_block*)malloc(sizeof(struct super_block)))){
 		fprintf(stderr,"No mem space!\n");
@@ -394,7 +396,7 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
             write_dir_entry(&rd[ParentInode->BlockPointer[blockNO]*BLOCK_SIZE+entry_pos], NewDirEntry);
 #ifdef UL_DEBUG
                 printf("Entry is registered in the first 8 blocks\n");
-                for (int k = 0; k <=13; k++){
+                for ( k = 0; k <=13; k++){
                     printf("%c", rd[ParentInode->BlockPointer[blockNO]*BLOCK_SIZE+entry_pos+k]);
                     (k==13)?(printf("\n")):(printf(""));
                 }
