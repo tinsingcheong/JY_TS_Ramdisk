@@ -211,7 +211,7 @@ uint8_t* ramdisk_init(){
 	}
 #endif
 	root_inode->type=0;
-	root_inode->size=0;
+	root_inode->size=BLOCK_SIZE;
 	root_inode->BlockPointer[0]=root_bid;
 	update_inode(ramdisk,0,root_inode);
 	
@@ -405,7 +405,7 @@ int search_file(uint8_t* rd, char* path){
 			for(j=0;j<16;j++){//every block of dir file has 16 entries
 				read_dir_entry(&rd[current_direct_blockid*BLOCK_SIZE+j*16],current_dir_entry);
 #ifdef UL_DEBUG
-				printf("i=%d, j=%d, %s, %s, \n", i,j,current_dir_entry->filename,path_list->filename);
+	//			printf("i=%d, j=%d, %s, %s, \n", i,j,current_dir_entry->filename,path_list->filename);
 #endif
 				if(strcmp(current_dir_entry->filename,path_list->filename)==0){
 					find_next_level_entry=1;
