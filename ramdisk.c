@@ -211,7 +211,7 @@ uint8_t* ramdisk_init(){
 	}
 #endif
 	root_inode->type=0;
-	root_inode->size=BLOCK_SIZE;
+	root_inode->size=0;
 	root_inode->BlockPointer[0]=root_bid;
 	update_inode(ramdisk,0,root_inode);
 	
