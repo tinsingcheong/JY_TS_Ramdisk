@@ -246,9 +246,11 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
     uint16_t InodeNO;
     int blockNO;
     int new_block_id;
+    int new_block_flag=0;
     int new_entry_block_id;
     int new_entry_table_block_id;
     uint8_t entry_pos;
+    double temp;
     
 	if(!(SuperBlock=(struct super_block*)malloc(sizeof(struct super_block)))){
 		fprintf(stderr,"No mem space!\n");
@@ -270,69 +272,145 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
     if (SuperBlock->FreeBlockNum != 0 && SuperBlock->FreeInodeNum != 0)
     {
         InodeNO = find_next_free_inode(rd);
+#ifdef UL_DEBUG
+        printf("Acquired Inode is %u.\n", InodeNO);
+#endif
         set_inode_bitmap(rd, InodeNO);
         Inode->type = (uint8_t) 0x0; // Initialize the type as directory file
         Inode->size = (uint32_t) 0x0; // Initialize the size as 0
         update_inode(rd, InodeNO, Inode); // Update the new Inode
         // Update the Parent Inode information
         read_inode(rd, ParentInodeNO, ParentInode);
-        double temp = ParentInode->size/BLOCK_SIZE;
-        if (temp - (int)temp > 0) // if the current blocks are not filled up
+#ifdef UL_DEBUG
+        printf("Read: ParentInode size is %d.\n", ParentInode->size);
+#endif
+        temp = (double)(ParentInode->size)/BLOCK_SIZE;
+        if (temp - (int)temp > 0) { // if the current blocks are not filled up
             blockNO = (int)temp;
+            new_block_flag = 0;
+        }
         else if (temp-(int)temp == 0) { // if the current blocks are filled up
             blockNO = (int)temp+1;
             new_block_id = find_next_free_block(rd);
             set_bitmap(rd, new_block_id);
-            if (blockNO<=7 && blockNO>=0) 
+            new_block_flag = 1;
+        }
+#ifdef UL_DEBUG
+            printf("Temp is %lf.\n", temp);
+            printf("Block # is %d.\n", blockNO);
+#endif
+        if (blockNO<=7 && blockNO>=0) {
+            if (new_block_flag == 1) 
                 ParentInode->BlockPointer[blockNO] = new_block_id;
-            else if (blockNO > 7 && blockNO <= 7+64){
-                if (blockNO == 8) {
+
+            rd[ParentInode->BlockPointer[blockNO]*BLOCK_SIZE+ParentInode->size%BLOCK_SIZE] = new_block_id;
+#ifdef UL_DEBUG
+            printf("File is registered in the first 8 blocks\n");
+#endif
+        }
+        else if (blockNO > 7 && blockNO <= 7+64){
+            if (new_block_flag == 1) {
+                if (blockNO == 8) { // Need to initiate the 9th block in the parent dir
                     new_entry_block_id = find_next_free_block(rd); 
                     set_bitmap(rd, new_entry_block_id);
                     ParentInode->BlockPointer[8]=new_entry_block_id;
+                    rd[ParentInode->BlockPointer[8]*BLOCK_SIZE] = (uint8_t)(new_block_id & 0x000000ff);
+                    rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
+                    rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
+                    rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
+                } 
+                else { // Need to assign a new block for the indirect list
+                    rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4] = (uint8_t)(new_block_id & 0x000000ff);
+                    rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
+                    rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
+                    rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
                 }
-                rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4] = (uint8_t)(new_block_id & 0x000000ff);
-                rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
-                rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
-                rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
             }
-            else if (blockNO > 7+64 && blockNO <= 7+64+64*64){
-                if (blockNO == 8+64) {
+
+            rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4] = (uint8_t)(new_block_id & 0x000000ff);
+            rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
+            rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
+            rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
+#ifdef UL_DEBUG
+            printf("File is registered in the 9th block\n");
+#endif
+        }
+        else if (blockNO > 7+64 && blockNO <= 7+64+64*64){
+            if (new_block_flag == 1) {
+                if (blockNO == 8+64) { // Need to initiate the 10th block in the parent dir
                     new_entry_table_block_id = find_next_free_block(rd);
                     set_bitmap(rd, new_entry_table_block_id);
                     ParentInode->BlockPointer[9]=new_entry_table_block_id;
+                    new_entry_block_id = find_next_free_block(rd);
+                    set_bitmap(rd, new_entry_block_id);
+                    rd[ParentInode->BlockPointer[9]*BLOCK_SIZE]=(uint8_t)(new_entry_block_id & 0x000000ff);
+                    rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+1]=(uint8_t)((new_entry_block_id & 0x0000ff00)>>BYTELEN);
+                    rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+2]=(uint8_t)((new_entry_block_id & 0x00ff0000)>>(2*BYTELEN));
+                    rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+3]=(uint8_t)((new_entry_block_id & 0xff000000)>>(3*BYTELEN));
+                    rd[new_entry_block_id*BLOCK_SIZE] = (uint8_t)(new_block_id & 0x000000ff);
+                    rd[new_entry_block_id*BLOCK_SIZE+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
+                    rd[new_entry_block_id*BLOCK_SIZE+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
+                    rd[new_entry_block_id*BLOCK_SIZE+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
                 }
-                if ((blockNO-(8+64))%64 == 0) {// Need a new block for second indirect entry table
+                else if ((blockNO-(8+64))%64 == 0) { // Need a new block for second indirect entry table
                     new_entry_block_id = find_next_free_block(rd);
                     set_bitmap(rd, new_entry_block_id);
                     rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]=(uint8_t)(new_entry_block_id & 0x000000ff);
                     rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64+1]=(uint8_t)((new_entry_block_id & 0x0000ff00)>>BYTELEN);
                     rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64+2]=(uint8_t)((new_entry_block_id & 0x00ff0000)>>(2*BYTELEN));
                     rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64+3]=(uint8_t)((new_entry_block_id & 0xff000000)>>(3*BYTELEN));
+                    rd[new_entry_block_id*BLOCK_SIZE] = (uint8_t)(new_block_id & 0x000000ff);
+                    rd[new_entry_block_id*BLOCK_SIZE+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
+                    rd[new_entry_block_id*BLOCK_SIZE+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
+                    rd[new_entry_block_id*BLOCK_SIZE+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
                 }
-                rd[(uint32_t)rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*BLOCK_SIZE+((blockNO-8-64)%64)*4] = (uint8_t)(new_block_id & 0x000000ff);
-                rd[(uint32_t)rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*BLOCK_SIZE+((blockNO-8-64)%64)*4+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
-                rd[(uint32_t)rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*BLOCK_SIZE+((blockNO-8-64)%64)*4+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
-                rd[(uint32_t)rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*BLOCK_SIZE+((blockNO-8-64)%64)*4+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
+                else {
+                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*BLOCK_SIZE+((blockNO-8-64)%64)*4] = (uint8_t)(new_block_id & 0x000000ff);
+                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*BLOCK_SIZE+((blockNO-8-64)%64)*4+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
+                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*BLOCK_SIZE+((blockNO-8-64)%64)*4+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
+                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*BLOCK_SIZE+((blockNO-8-64)%64)*4+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
+                }
             }
-            else{
 #ifdef UL_DEBUG
-                printf("Block # is smaller than 0 or bigger than the limit!\n");
+            printf("File is registered in the 10th block\n");
 #endif
-            }
         }
-
+        else{
+#ifdef UL_DEBUG
+            printf("Block # is smaller than 0 or bigger than the limit!\n");
+#endif
+        }
+        
         entry_pos=ParentInode->size%BLOCK_SIZE; // the position that the entry should be written to 
+#ifdef UL_DEBUG
+                printf("Entry position is %d.\n",entry_pos);
+#endif
         strcpy(NewDirEntry->filename,name);
         NewDirEntry->InodeNo = InodeNO;
+#ifdef UL_DEBUG
+        printf("New entry name is: %s.\n", NewDirEntry->filename);
+#endif
         if (blockNO<=7 && blockNO>=0) {
             write_dir_entry(&rd[ParentInode->BlockPointer[blockNO]*BLOCK_SIZE+entry_pos], NewDirEntry);
+#ifdef UL_DEBUG
+                printf("Entry is registered in the first 8 blocks\n");
+                for (int k = 0; k <=13; k++){
+                    printf("%c", rd[ParentInode->BlockPointer[blockNO]*BLOCK_SIZE+entry_pos+k]);
+                    (k==13)?(printf("\n")):(printf(""));
+                }
+#endif
         }
         else if (blockNO>7 && blockNO<=7+64) {
             write_dir_entry(&rd[rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4]*BLOCK_SIZE+entry_pos], NewDirEntry);
+#ifdef UL_DEBUG
+                printf("Entry is registered in the 9th block\n");
+#endif
         }
         else if (blockNO>7+64 && blockNO<=7+64+64*64) {
             write_dir_entry(&rd[rd[rd[ParentInode->BlockPointer[9]*BLOCK_SIZE+(blockNO-(8+64))*4/64]+((blockNO-(8+64))%64)*4]*BLOCK_SIZE+entry_pos], NewDirEntry);
+#ifdef UL_DEBUG
+                printf("Entry is registered in the 10th block\n");
+#endif
         }
         else{
 #ifdef UL_DEBUG
@@ -342,6 +420,9 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
             
         ParentInode->size += 16;
         update_inode(rd, ParentInodeNO, ParentInode);
+#ifdef UL_DEBUG
+        printf("Update: ParentInode size is%d.\n", ParentInode->size);
+#endif
         return 0;
     }    
     else
