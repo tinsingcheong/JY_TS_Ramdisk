@@ -28,13 +28,13 @@ int main(int argc, char* argv[]){
         sprintf(name, "ts_%d.txt", i);
         create_file(rd, 0, name);
     }
-    for (i = 1; i<=FILE_NUM ; i++)
+/*    for (i = 1; i<=FILE_NUM ; i++)
     {
         sprintf(search_name, "/ts_%d.txt", i);
 	    search_file_inodeNO = search_file(rd,search_name);
         printf("File InodeNO is:%d\n", search_file_inodeNO);
     }
-	return 0;
+*/	return 0;
 }
 
 #endif

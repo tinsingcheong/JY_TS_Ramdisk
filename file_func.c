@@ -114,6 +114,9 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         else if (blockNO > 7 && blockNO <= 7+64){
             if (new_block_flag == 1) {
                 if (blockNO == 8) { // Need to initiate the 9th block in the parent dir
+#ifdef UL_DEBUG
+            printf("I'm here!\n");
+#endif
                     new_entry_block_id = find_next_free_block(rd); 
                     set_bitmap(rd, new_entry_block_id);
                     ParentInode->BlockPointer[8]=new_entry_block_id;
@@ -207,6 +210,10 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
             write_dir_entry(&rd[rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4]*BLOCK_SIZE+entry_pos], NewDirEntry);
 #ifdef UL_DEBUG
                 printf("Entry is registered in the 9th block\n");
+                for ( k = 0; k <=13; k++){
+                    printf("%c", rd[rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4]*BLOCK_SIZE+entry_pos+k]);
+                    (k==13)?(printf("\n")):(printf(""));
+                }
 #endif
         }
         else if (blockNO>7+64 && blockNO<=7+64+64*64) {
