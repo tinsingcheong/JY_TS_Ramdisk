@@ -1,3 +1,4 @@
+#include <stdint.h>
 #ifndef FILE_FUNC_H
 #define FILE_FUNC_H
 int write_file (uint8_t* rd, uint16_t InodeNO, int pos, char* string, int length);

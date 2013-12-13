@@ -114,9 +114,6 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         else if (blockNO > 7 && blockNO <= 7+64){
             if (new_block_flag == 1) {
                 if (blockNO == 8) { // Need to initiate the 9th block in the parent dir
-#ifdef UL_DEBUG
-            printf("I'm here!\n");
-#endif
                     new_entry_block_id = find_next_free_block(rd); 
                     set_bitmap(rd, new_entry_block_id);
                     ParentInode->BlockPointer[8]=new_entry_block_id;
@@ -471,6 +468,9 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
     struct dir_entry* ParentDirEntry;
     int blockNO;
     int deleted_blockNO;
+    int read_blockNO;
+    int read_block_tableNO;
+    int read_double_tableNO;
     uint8_t entry_pos;
     int i,j;
     int find_flag=0;
@@ -523,7 +523,8 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
     for (i=0;i<blockNO;i++) {
         if (i>=0 && i<=7) {
             for (j=0;j<16;j++) {
-                read_dir_entry(&rd[ParentInode->BlockPointer[i]*BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
+                read_blockNO = ParentInode->BlockPointer[i];
+                read_dir_entry(&rd[read_blockNO*BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
                 if (strcmp(ParentDirEntry->filename, name)==0){
                     find_flag = 1;
                     break;
@@ -532,7 +533,9 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
         }
         else if (i>7 && i<=7+64) {
             for (j=0;j<16;j++) {
-                read_dir_entry(&rd[rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(i-8)*4]*BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
+                read_block_tableNO = ParentInode->BlockPointer[8];
+                read_blockNO = *((uint32_t*)(rd+read_block_tableNO*BLOCK_SIZE+(i-8)*4));
+                read_dir_entry(&rd[read_blockNO*BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
                 if (strcmp(ParentDirEntry->filename, name)==0){
                     find_flag = 1;
                     break;
@@ -541,7 +544,10 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
         }
         else if (i>7+64 && i<=7+64+64*64) {
             for (j=0;j<16;j++) {
-                read_dir_entry(&rd[rd[rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+((i-(8+64))*4/64)]*BLOCK_SIZE+((i-(8+64))%64)*4]+j*ENTRY_SIZE], ParentDirEntry);
+                read_double_tableNO = ParentInode->BlockPointer[9];
+                read_block_tableNO = *((uint32_t*)(rd+read_double_tableNO*BLOCK_SIZE+((i-(8+64))*4/64)));
+                read_blockNO = *((uint32_t*)(rd+read_block_tableNO*BLOCK_SIZE+((i-(8+64))%64)*4));
+                read_dir_entry(&rd[read_blockNO*BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
                 if (strcmp(ParentDirEntry->filename, name)==0){
                     find_flag = 1;
                     break;
@@ -559,7 +565,7 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
     if (delete_flag == -1)
         return(-1);
     update_inode(rd, ParentInodeNO, ParentInode);
-    update_superblock(rd, SuperBlock);
+    partial_update_superblock(rd);
     return 0;
 }
 
@@ -578,6 +584,9 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
     struct dir_entry* ParentDirEntry;
     struct dir_entry* DeleteEntry;
     int blockNO;
+    int read_blockNO;
+    int read_block_tableNO;
+    int read_double_tableNO;
     int fileNO;
     int deleted_blockNO;
     uint8_t entry_pos;
@@ -587,7 +596,7 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
 	if(!(SuperBlock=(struct super_block*)malloc(sizeof(struct super_block)))){
 		fprintf(stderr,"No mem space!\n");
 		exit(-1);
-	}
+    }
 	if(!(Inode=(struct inode*)malloc(sizeof(struct inode)))){
 		fprintf(stderr,"No mem space!\n");
 		exit(-1);
@@ -622,12 +631,21 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
             blockNO_file = (int)temp;
         else
             blockNO_file = (int)temp-1;
-        if (blockNO_file>=0 && blockNO_file<=7) 
-            read_dir_entry(&rd[Inode->BlockPointer[blockNO_file]*BLOCK_SIZE+i*ENTRY_SIZE], DeleteEntry);
-        else if (blockNO_file>7 && blockNO_file<=7+64)
-            read_dir_entry(&rd[rd[Inode->BlockPointer[8]*BLOCK_SIZE+(blockNO_file-8)*4]*BLOCK_SIZE+((i-8*16)%16)*ENTRY_SIZE], DeleteEntry);
-        else if (blockNO_file>7+64 && blockNO_file<=7+64+64*64)
-            read_dir_entry(&rd[rd[rd[Inode->BlockPointer[8]*BLOCK_SIZE+(blockNO_file-(8+64))*4/64]*BLOCK_SIZE+((blockNO_file-(8+64)%64)*4)]+((i-(8+64)*16)%16)*ENTRY_SIZE], DeleteEntry);
+        if (blockNO_file>=0 && blockNO_file<=7) {
+            read_blockNO = Inode->BlockPointer[blockNO_file];
+            read_dir_entry(&rd[read_blockNO*BLOCK_SIZE+i*ENTRY_SIZE], DeleteEntry);
+        }
+        else if (blockNO_file>7 && blockNO_file<=7+64) {
+            read_block_tableNO = Inode->BlockPointer[8];
+            read_blockNO = *((uint32_t*)(rd+read_block_tableNO*BLOCK_SIZE+(blockNO_file-8)*4));
+            read_dir_entry(&rd[read_blockNO*BLOCK_SIZE+((i-8*16)%16)*ENTRY_SIZE], DeleteEntry);
+        }
+        else if (blockNO_file>7+64 && blockNO_file<=7+64+64*64) {
+            read_double_tableNO = Inode->BlockPointer[9];
+            read_block_tableNO = *((uint32_t*)(rd+read_double_tableNO*BLOCK_SIZE+(blockNO_file-(8+64))*4/64));
+            read_blockNO = *((uint32_t*)(rd+read_block_tableNO*BLOCK_SIZE+((blockNO_file-(8+64))%64)*4));
+            read_dir_entry(&rd[read_blockNO*BLOCK_SIZE+((i-(8+64)*16)%16)*ENTRY_SIZE], DeleteEntry);
+        }
         else return(-1);
         
         read_inode(rd, DeleteEntry->InodeNo, DeleteInode);
@@ -645,12 +663,21 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
         blockNO = (int)temp-1;
     for (i=0;i<blockNO;i++)
     {
-        if (i>=0 && i<=7)
-            clr_bitmap(rd, Inode->BlockPointer[i]);
-        else if (i>7 && i<=7+64)
-            clr_bitmap(rd,rd[Inode->BlockPointer[8]*BLOCK_SIZE+(i-8)*4]);
-        else if (i>7+64 && i<=7+64+64*64)
-            clr_bitmap(rd, rd[rd[Inode->BlockPointer[9]*BLOCK_SIZE+(i-(8+64)*4/64)]*BLOCK_SIZE+((i-(8+64))%64)*4]);
+        if (i>=0 && i<=7) {
+            read_blockNO=Inode->BlockPointer[i];
+            clr_bitmap(rd,read_blockNO);
+        }
+        else if (i>7 && i<=7+64) {
+            read_block_tableNO = Inode->BlockPointer[8];
+            read_blockNO = *((uint32_t*)(rd+read_block_tableNO*BLOCK_SIZE+(i-8)*4));
+            clr_bitmap(rd,read_blockNO);
+        }
+        else if (i>7+64 && i<=7+64+64*64) {
+            read_double_tableNO = Inode->BlockPointer[9];
+            read_block_tableNO = *((uint32_t*)(rd+read_double_tableNO*BLOCK_SIZE+(i-(8+64))*4/64));
+            read_blockNO = *((uint32_t*)(rd+read_block_tableNO*BLOCK_SIZE+((i-(8+64))%64)*4));
+            clr_bitmap(rd,read_blockNO);
+        }
     }
     
     // Find the entry that need to be deleted in the Parent directory
@@ -663,7 +690,8 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
     for (i=0;i<blockNO;i++) {
         if (i>=0 && i<=7) {
             for (j=0;j<16;j++) {
-                read_dir_entry(&rd[ParentInode->BlockPointer[i]*BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
+                read_blockNO=ParentInode->BlockPointer[i];
+                read_dir_entry(&rd[read_blockNO*BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
                 if (strcmp(ParentDirEntry->filename, name)==0){
                     find_flag = 1;
                     break;
@@ -672,7 +700,9 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
         }
         else if (i>7 && i<=7+64) {
             for (j=0;j<16;j++) {
-                read_dir_entry(&rd[rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(i-8)*4]*BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
+                read_block_tableNO=ParentInode->BlockPointer[8];
+                read_blockNO=*((uint32_t*)(rd+read_block_tableNO*BLOCK_SIZE+(i-8)*4));
+                read_dir_entry(&rd[read_blockNO*BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
                 if (strcmp(ParentDirEntry->filename, name)==0){
                     find_flag = 1;
                     break;
@@ -681,7 +711,10 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
         }
         else if (i>7+64 && i<=7+64+64*64) {
             for (j=0;j<16;j++) {
-                read_dir_entry(&rd[rd[rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+((i-(8+64))*4/64)]*BLOCK_SIZE+((i-(8+64))%64)*4]+j*ENTRY_SIZE], ParentDirEntry);
+                read_double_tableNO=ParentInode->BlockPointer[9];
+                read_block_tableNO=*((uint32_t*)(rd+read_double_tableNO*BLOCK_SIZE+(i-(8+64))*4/64));
+                read_blockNO=*((uint32_t*)(rd+read_block_tableNO*BLOCK_SIZE+((i-(8+64))%64)*4));
+                read_dir_entry(&rd[read_blockNO*BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
                 if (strcmp(ParentDirEntry->filename, name)==0){
                     find_flag = 1;
                     break;
@@ -699,7 +732,7 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
     if (delete_flag == -1)
         return(-1);
     update_inode(rd, ParentInodeNO, ParentInode);
-    update_superblock(rd, SuperBlock);
+    partial_update_superblock(rd);
     return 0; // -1 means removal fails
 }
 
@@ -707,55 +740,80 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
 int delete_dir_entry(uint8_t* rd, struct inode* Inode, int deleted_blockNO)
 {
     int blockNO;
+    int read_last_blockNO;
+    int read_last_block_tableNO;
+    int read_last_double_tableNO;
+    int read_dele_blockNO;
+    int read_dele_block_tableNO;
+    int read_dele_double_tableNO;
+
     double temp = Inode->size/BLOCK_SIZE;
     if (temp-(int)temp > 0)
         blockNO = (int)temp;
     else blockNO = (int)temp-1;
 
     if (deleted_blockNO>=0 && deleted_blockNO<=7) {
+        read_dele_blockNO=Inode->BlockPointer[deleted_blockNO];
         if (blockNO>=0 && deleted_blockNO<=7) {
-            Inode->BlockPointer[deleted_blockNO] = Inode->BlockPointer[blockNO];
-            Inode->size -= 16;
+            read_last_blockNO = Inode->BlockPointer[blockNO];
+            read_dele_blockNO = read_last_blockNO;
         }    
         else if (blockNO>7 && blockNO<=7+64) {
-            Inode->BlockPointer[deleted_blockNO] = (uint32_t)rd[Inode->BlockPointer[8]*256+(blockNO-8)*4];
-            Inode->size -= 16;
+            read_last_block_tableNO = Inode->BlockPointer[8];
+            read_last_blockNO = *((uint32_t*)(rd+read_last_block_tableNO*BLOCK_SIZE+(blockNO-8)*4));
+            read_dele_blockNO = read_last_blockNO;
         }
         else if (blockNO>7+64 && blockNO<=7+64+64*64) {
-            Inode->BlockPointer[deleted_blockNO] = (uint32_t)rd[rd[Inode->BlockPointer[8]*256+(blockNO-(8+64))*4/64]+((blockNO-(8+64))%64)*4];
-            Inode->size -= 16;
+            read_last_double_tableNO = Inode->BlockPointer[9];
+            read_last_block_tableNO = *((uint32_t*)(rd+read_last_double_tableNO*BLOCK_SIZE+(blockNO-(8+64))*4/64));
+            read_last_blockNO = *((uint32_t*)(rd+read_last_block_tableNO*BLOCK_SIZE+((blockNO-(8+64))%64)*4));
+            read_dele_blockNO = read_last_blockNO;
         }
         else return(-1);
+        Inode->size -= 16;
     }
     else if (deleted_blockNO>7 && deleted_blockNO<=7+64) {
+        read_dele_block_tableNO = Inode->BlockPointer[8];
+        read_dele_blockNO = *((uint32_t*)(rd+read_dele_block_tableNO*BLOCK_SIZE+(deleted_blockNO-8)*4));
         if (blockNO>=0 && deleted_blockNO<=7) {
-            rd[Inode->BlockPointer[deleted_blockNO]*256+(deleted_blockNO-8)*4] = Inode->BlockPointer[blockNO];
-            Inode->size -= 16;
+            read_last_blockNO = Inode->BlockPointer[blockNO];
+            read_dele_blockNO = read_last_blockNO;
         }    
         else if (blockNO>7 && blockNO<=7+64) {
-            rd[Inode->BlockPointer[deleted_blockNO]*256+(deleted_blockNO-8)*4] = (uint32_t)rd[Inode->BlockPointer[8]*256+(blockNO-8)*4];
-            Inode->size -= 16;
+            read_last_block_tableNO = Inode->BlockPointer[8];
+            read_last_blockNO = *((uint32_t*)(rd+read_last_block_tableNO*BLOCK_SIZE+(blockNO-8)*4));
+            read_dele_blockNO = read_last_blockNO;
         }
         else if (blockNO>7+64 && blockNO<=7+64+64*64) {
-            rd[Inode->BlockPointer[deleted_blockNO]*256+(deleted_blockNO-8)*4] = (uint32_t)rd[rd[Inode->BlockPointer[8]*256+(blockNO-(8+64))*4/64]+((blockNO-(8+64))%64)*4];
-            Inode->size -= 16;
+            read_last_double_tableNO = Inode->BlockPointer[9];
+            read_last_block_tableNO = *((uint32_t*)(rd+read_last_double_tableNO*BLOCK_SIZE+(blockNO-(8+64))*4/64));
+            read_last_blockNO = *((uint32_t*)(rd+read_last_block_tableNO*BLOCK_SIZE+((blockNO-(8+64))%64)*4));
+            read_dele_blockNO = read_last_blockNO;
         }
         else return(-1);
+        Inode->size -= 16;
     }
     else if (deleted_blockNO>7+64 && deleted_blockNO<=7+64+64*64){
+        read_dele_double_tableNO = Inode->BlockPointer[9];
+        read_dele_block_tableNO = *((uint32_t*)(rd+read_dele_double_tableNO*BLOCK_SIZE+(deleted_blockNO-(8+64))*4/64));
+        read_dele_blockNO = *((uint32_t*)(rd+read_dele_block_tableNO*BLOCK_SIZE+((deleted_blockNO-(8+64))%64)*4));
         if (blockNO>=0 && deleted_blockNO<=7) {
-            rd[rd[Inode->BlockPointer[deleted_blockNO]*256+(deleted_blockNO-(8+64))*4/64]*256+((blockNO-(8+64))%64)*4] = Inode->BlockPointer[blockNO];
-            Inode->size -= 16;
+            read_last_blockNO = Inode->BlockPointer[blockNO];
+            read_dele_blockNO = read_last_blockNO;
         }    
         else if (blockNO>7 && blockNO<=7+64) {
-            rd[rd[Inode->BlockPointer[deleted_blockNO]*256+(deleted_blockNO-(8+64))*4/64]*256+((blockNO-(8+64))%64)*4] = (uint32_t)rd[Inode->BlockPointer[8]*256+(blockNO-8)*4];
-            Inode->size -= 16;
+            read_last_block_tableNO = Inode->BlockPointer[8];
+            read_last_blockNO = *((uint32_t*)(rd+read_last_block_tableNO*BLOCK_SIZE+(blockNO-8)*4));
+            read_dele_blockNO = read_last_blockNO;
         }
         else if (blockNO>7+64 && blockNO<=7+64+64*64) {
-            rd[rd[Inode->BlockPointer[deleted_blockNO]*256+(deleted_blockNO-(8+64))*4/64]*256+((blockNO-(8+64))%64)*4] = (uint32_t)rd[rd[Inode->BlockPointer[8]*256+(blockNO-(8+64))*4/64]+((blockNO-(8+64))%64)*4];
-            Inode->size -= 16;
+            read_last_double_tableNO = Inode->BlockPointer[9];
+            read_last_block_tableNO = *((uint32_t*)(rd+read_last_double_tableNO*BLOCK_SIZE+(blockNO-(8+64))*4/64));
+            read_last_blockNO = *((uint32_t*)(rd+read_last_block_tableNO*BLOCK_SIZE+((blockNO-(8+64))%64)*4));
+            read_dele_blockNO = read_last_blockNO;
         }
         else return(-1);
+        Inode->size -= 16;
     }
     else return(-1);
     return 0;
