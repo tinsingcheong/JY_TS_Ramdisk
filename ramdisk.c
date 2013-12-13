@@ -337,7 +337,7 @@ int search_file(uint8_t* rd, char* path){
 #ifdef UL_DEBUG
 	printf("Path list printing...\n");
 	for(path_list=path_root;path_list!=NULL;path_list=path_list->next){
-		printf("%s\n",path_list->filename);
+	//	printf("%s\n",path_list->filename);
 	}
 #endif
 
