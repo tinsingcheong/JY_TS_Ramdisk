@@ -176,10 +176,18 @@ void read_dir_entry(uint8_t* ptr, struct dir_entry* DirEntry){
 void write_dir_entry(uint8_t* ptr, struct dir_entry* DirEntry){
 	int i;
 	i=0;
-	while(DirEntry->filename[i] && i<14){
+	/*while(DirEntry->filename[i] && i<14){
 		ptr[i]=DirEntry->filename[i];
 		i++;
+	}*/
+	while(i<14){
+		if(DirEntry->filename[i])
+			ptr[i]=DirEntry->filename[i];
+		else
+			ptr[i]=0;
+		i++;
 	}
+
 	ptr[14]=(uint8_t)(DirEntry->InodeNo & 0x00ff);
 	ptr[15]=(uint8_t)(DirEntry->InodeNo>>BYTELEN);
 }
@@ -224,7 +232,7 @@ uint8_t* ramdisk_init(){
 		exit(-1);
 	}
 #endif 
-	InitSuperBlock->FreeBlockNum=BLOCK_NUM-(BITMAP_LIMIT+1)/BLOCK_SIZE-1;//The root takes an additional block besides inodes, superblock and bitmap
+	InitSuperBlock->FreeBlockNum=BLOCK_NUM-(BITMAP_LIMIT+1)/BLOCK_SIZE;
 	InitSuperBlock->FreeInodeNum=INODE_NUM-1;//The root dir takes one inode
 	memset(InitSuperBlock->InodeBitmap,0,INODEBITMAP_SIZE);
 	update_superblock(ramdisk,InitSuperBlock);

@@ -1,6 +1,11 @@
-#include <stdint.h>
+
 #ifndef FILE_FUNC_H
 #define FILE_FUNC_H
+
+#include"ramdisk_struct.h"
+#ifdef UL_DEBUG
+#include <stdint.h>
+#endif
 int write_file (uint8_t* rd, uint16_t InodeNO, int pos, char* string, int length);
 int read_file (uint8_t* rd, uint16_t InodeNO, int pos);
 int read_dir (uint8_t* rd, uint16_t InodeNO);
