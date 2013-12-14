@@ -9,5 +9,5 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name);
 int create_dir (uint8_t* rd, uint16_t ParentDirInode, char* name);
 int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* name);
 int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* name);
-int delete_dir_entry(uint8_t* rd, struct inode* Inode, int delete_blockNO);
+int delete_dir_entry(uint8_t* rd, struct inode* ParentInode, uint16_t ParentInodeNO, int delete_blockNO);
 #endif
