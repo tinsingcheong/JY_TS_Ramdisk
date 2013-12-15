@@ -11,21 +11,6 @@
 #include <string.h>
 #endif
 
-int write_file (uint8_t* rd, uint16_t InodeNO, int pos, char* string, int length)
-{
-    return(-1); // -1 means nothing is written into the file 
-}
-
-int read_file (uint8_t* rd, uint16_t InodeNO, int pos)
-{
-    return(-1); // -1 means nothing is read from the file
-}
-
-int read_dir (uint8_t* rd, uint16_t InodeNO)
-{
-    return(-1); // -1 means no such directory
-}
-
 int get_file_size (uint8_t* rd, uint16_t InodeNO)
 {
     struct inode* Inode;
@@ -833,7 +818,7 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
         }
     }
     // Now ParentDirEntry should contain the entry that should be deleted
-    int delete_flag=delete_dir_entry(rd, ParentInode, ParentInodeNO, deleted_blockNO);
+    int delete_flag=delete_dir_entry(rd, ParentInode, ParentInodeNO, deleted_entryNO);
     if (delete_flag == -1)
         return(-1);
     partial_update_superblock(rd);
@@ -863,6 +848,9 @@ int delete_dir_entry(uint8_t* rd, struct inode* ParentInode, uint16_t ParentInod
     if (last_entryNO>=1 && last_entryNO<=8*16 )
     {
         last_entry_blockNO = ParentInode->BlockPointer[(int)(last_entryNO-1)/16];
+#ifdef UL_DEBUG
+        printf("The last entry %d is in block#%d.\n", last_entryNO, last_entry_blockNO);
+#endif
         if (last_entryNO%16 == 1)
             clr_bitmap(rd, last_entry_blockNO);
     }
@@ -870,6 +858,9 @@ int delete_dir_entry(uint8_t* rd, struct inode* ParentInode, uint16_t ParentInod
     {
         last_entry_block_tableNO = ParentInode->BlockPointer[8]; 
         last_entry_blockNO = *((uint32_t*)(rd+last_entry_block_tableNO*BLOCK_SIZE+((int)((last_entryNO-1)/16)-8)*4));
+#ifdef UL_DEBUG
+        printf("The last entry %d is in block#%d.\n", last_entryNO, last_entry_blockNO);
+#endif
         if (last_entryNO%16 == 1)
             clr_bitmap(rd, last_entry_blockNO);
     }
@@ -878,6 +869,9 @@ int delete_dir_entry(uint8_t* rd, struct inode* ParentInode, uint16_t ParentInod
         last_entry_double_tableNO = ParentInode->BlockPointer[9];
         last_entry_block_tableNO = *((uint32_t*)(rd+last_entry_double_tableNO*BLOCK_SIZE+(((last_entryNO-1)/16-(8+64))/64)*4));
         last_entry_blockNO = *((uint32_t*)(rd+last_entry_block_tableNO*BLOCK_SIZE+(((last_entryNO-1)/16-(8+64))%64)*4));
+#ifdef UL_DEBUG
+        printf("The last entry %d is in block#%d.\n", last_entryNO, last_entry_blockNO);
+#endif
         if (last_entryNO%16 == 1)
             clr_bitmap(rd, last_entry_blockNO);
     }
@@ -897,22 +891,37 @@ int delete_dir_entry(uint8_t* rd, struct inode* ParentInode, uint16_t ParentInod
         if (deleted_entryNO>=1 && deleted_entryNO<=8*16)
         {
             deleted_entry_blockNO = ParentInode->BlockPointer[(int)((deleted_entryNO-1)/16)];
+#ifdef UL_DEBUG
+            printf("The delete entry %d is in block#%d.\n", deleted_entryNO, deleted_entry_blockNO);
+#endif
         }
         else if (deleted_entryNO>8*16 && deleted_entryNO<=(8+64)*16)
         {
             deleted_entry_block_tableNO = ParentInode->BlockPointer[8]; 
             deleted_entry_blockNO = *((uint32_t*)(rd+deleted_entry_block_tableNO*BLOCK_SIZE+((int)((deleted_entryNO-1)/16)-8)*4));
+#ifdef UL_DEBUG
+            printf("The delete entry %d is in block#%d.\n", deleted_entryNO, deleted_entry_blockNO);
+#endif
         }
         else if (deleted_entryNO>(8+64)*16 && deleted_entryNO<=(8+64+64*64)*16)
         {
             deleted_entry_double_tableNO = ParentInode->BlockPointer[9];
             deleted_entry_block_tableNO = *((uint32_t*)(rd+deleted_entry_double_tableNO*BLOCK_SIZE+(((deleted_entryNO-1)/16-(8+64))/64)*4));
             deleted_entry_blockNO = *((uint32_t*)(rd+deleted_entry_block_tableNO*BLOCK_SIZE+(((deleted_entryNO-1)/16-(8+64))%64)*4));
+#ifdef UL_DEBUG
+            printf("The delete entry %d is in block#%d.\n", deleted_entryNO, deleted_entry_blockNO);
+#endif
         }
-        else return(-1);
-
+        else 
+        {
+#ifdef UL_DEBUG
+            printf("Where are you? The delete entry is %d.\n", deleted_entryNO);
+#endif
+            return(-1);
+        }
         read_dir_entry(&rd[last_entry_blockNO*BLOCK_SIZE+((last_entryNO-1)%16)*16], last_entry);
         write_dir_entry(&rd[deleted_entry_blockNO*BLOCK_SIZE+((deleted_entryNO-1)%16)*16], last_entry);
+        clear_dir_entry(&rd[last_entry_blockNO*BLOCK_SIZE+((last_entryNO-1)%16)*16]);
         ParentInode->size -= 16;
         update_inode(rd, ParentInodeNO, ParentInode);
         return 0;

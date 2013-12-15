@@ -6,9 +6,6 @@
 #ifdef UL_DEBUG
 #include <stdint.h>
 #endif
-int write_file (uint8_t* rd, uint16_t InodeNO, int pos, char* string, int length);
-int read_file (uint8_t* rd, uint16_t InodeNO, int pos);
-int read_dir (uint8_t* rd, uint16_t InodeNO);
 int get_file_size (uint8_t* rd, uint16_t InodeNO);
 int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name);
 int create_dir (uint8_t* rd, uint16_t ParentDirInode, char* name);

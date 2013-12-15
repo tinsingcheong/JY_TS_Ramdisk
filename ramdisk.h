@@ -26,6 +26,7 @@ void clr_inode_bitmap(uint8_t* rd, uint16_t InodeNO);
 int inode_bitmap_sum_up(uint8_t* rd);
 void read_dir_entry(uint8_t* ptr, struct dir_entry* DirEntry);
 void write_dir_entry(uint8_t* ptr, struct dir_entry* DirEntry);
+void clear_dir_entry(uint8_t* ptr);
 uint8_t* ramdisk_init();
 int search_file(uint8_t* rd, char* path);
 #endif

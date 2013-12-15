@@ -192,6 +192,14 @@ void write_dir_entry(uint8_t* ptr, struct dir_entry* DirEntry){
 	ptr[15]=(uint8_t)(DirEntry->InodeNo>>BYTELEN);
 }
 
+void clear_dir_entry(uint8_t* ptr){
+    int i;
+    i=0;
+    while (i<16){
+        ptr[i]=0;
+        i++;
+    }
+}
 
 uint8_t* ramdisk_init(){
 	int i;
