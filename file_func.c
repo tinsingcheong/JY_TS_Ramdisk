@@ -255,7 +255,7 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         ParentInode->size += 16;
         update_inode(rd, ParentInodeNO, ParentInode);
 #ifdef UL_DEBUG
-//        printf("Update: ParentInode size is %d.\n", ParentInode->size);
+        printf("Update: ParentInode size is %d.\n", ParentInode->size);
 #endif
 		partial_update_superblock(rd);
         return 0;
@@ -308,12 +308,12 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         InodeNO = find_next_free_inode(rd);
         if (InodeNO == 0xFFFF) {
 #ifdef UL_DEBUG
-            printf("There is no free block anymore.\n");
+//            printf("create_dir: There is no free block anymore.\n");
 #endif
             return(-1);
         }
 #ifdef UL_DEBUG
-        printf("Acquired Inode is %u.\n", InodeNO);
+//        printf("create_dir: Acquired Inode is %u.\n", InodeNO);
 #endif
         set_inode_bitmap(rd, InodeNO);
         Inode->type = (uint8_t) 0x0; // Initialize the type as regular file
@@ -322,7 +322,7 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         // Update the Parent Inode information
         read_inode(rd, ParentInodeNO, ParentInode);
 #ifdef UL_DEBUG
-        printf("Read: ParentInode size is %d.\n", ParentInode->size);
+//        printf("create_dir: Read: ParentInode size is %d.\n", ParentInode->size);
 #endif
         temp = (double)(ParentInode->size)/BLOCK_SIZE;
         if (temp - (int)temp > 0) { // if the current blocks are not filled up
@@ -334,7 +334,7 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
             new_block_id = find_next_free_block(rd);
             if (new_block_id == -1) {
 #ifdef UL_DEBUG
-                printf("There is no free block anymore.\n");
+//                printf("create_dir: There is no free block anymore.\n");
 #endif
                 return(-1);
             }
@@ -342,8 +342,8 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
             new_block_flag = 1;
         }
 #ifdef UL_DEBUG
-            printf("Temp is %lf.\n", temp);
-            printf("Block # is %d.\n", blockNO);
+//            printf("create_dir: Temp is %lf.\n", temp);
+//            printf("create_dir: Block # is %d.\n", blockNO);
 #endif
         if (blockNO<=7 && blockNO>=0) {
             if (new_block_flag == 1) 
@@ -351,19 +351,19 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 
             rd[ParentInode->BlockPointer[blockNO]*BLOCK_SIZE+ParentInode->size%BLOCK_SIZE] = new_block_id;
 #ifdef UL_DEBUG
-            printf("File is registered in the first 8 blocks\n");
+//            printf("create_dir: File is registered in the first 8 blocks\n");
 #endif
         }
         else if (blockNO > 7 && blockNO <= 7+64){
             if (new_block_flag == 1) {
                 if (blockNO == 8) { // Need to initiate the 9th block in the parent dir
 #ifdef UL_DEBUG
-            printf("I'm here!\n");
+//            printf("create_dir: I'm here!\n");
 #endif
                     new_entry_block_id = find_next_free_block(rd); 
                     if (new_entry_block_id == -1) {
 #ifdef UL_DEBUG
-                        printf("There is no free block anymore.\n");
+//                        printf("create_dir: There is no free block anymore.\n");
 #endif
                         return(-1);
                     }
@@ -387,7 +387,7 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
             rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
             rd[ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
 #ifdef UL_DEBUG
-            printf("File is registered in the 9th block\n");
+//            printf("create_dir: File is registered in the 9th block\n");
 #endif
         }
         else if (blockNO > 7+64 && blockNO <= 7+64+64*64){
@@ -396,7 +396,7 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
                     new_entry_table_block_id = find_next_free_block(rd);
                     if (new_entry_table_block_id == -1) {
 #ifdef UL_DEBUG
-                        printf("There is no free block anymore.\n");
+//                        printf("create_dir: There is no free block anymore.\n");
 #endif
                         return(-1);
                     }
@@ -405,7 +405,7 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
                     new_entry_block_id = find_next_free_block(rd);
                     if (new_entry_block_id == -1) {
 #ifdef UL_DEBUG
-                        printf("There is no free block anymore.\n");
+//                        printf("create_dir: There is no free block anymore.\n");
 #endif
                         return(-1);
                     }
@@ -423,7 +423,7 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
                     new_entry_block_id = find_next_free_block(rd);
                     if (new_entry_block_id == -1) {
 #ifdef UL_DEBUG
-                        printf("There is no free block anymore.\n");
+//                        printf("create_dir: There is no free block anymore.\n");
 #endif
                         return(-1);
                     }
@@ -445,32 +445,32 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
                 }
             }
 #ifdef UL_DEBUG
-            printf("File is registered in the 10th block\n");
+//            printf("create_dir: File is registered in the 10th block\n");
 #endif
         }
         else{
 #ifdef UL_DEBUG
-            printf("Block # is smaller than 0 or bigger than the limit!\n");
+//            printf("create_dir: Block # is smaller than 0 or bigger than the limit!\n");
 #endif
         }
         
         entry_pos=ParentInode->size%BLOCK_SIZE; // the position that the entry should be written to 
 #ifdef UL_DEBUG
-                printf("Entry position is %d.\n",entry_pos);
+//                printf("create_dir: Entry position is %d.\n",entry_pos);
 #endif
         strcpy(NewDirEntry->filename,name);
         NewDirEntry->InodeNo = InodeNO;
 #ifdef UL_DEBUG
-        printf("New entry name is: %s.\n", NewDirEntry->filename);
+//        printf("create_dir: New entry name is: %s.\n", NewDirEntry->filename);
 #endif
         if (blockNO<=7 && blockNO>=0) {
             write_dir_entry(&rd[ParentInode->BlockPointer[blockNO]*BLOCK_SIZE+entry_pos], NewDirEntry);
 #ifdef UL_DEBUG
-                printf("Entry is registered in the first 8 blocks\n");
-                for ( k = 0; k <=13; k++){
-                    printf("%c", rd[ParentInode->BlockPointer[blockNO]*BLOCK_SIZE+entry_pos+k]);
-                    (k==13)?(printf("\n")):(printf(""));
-                }
+//                printf("create_dir: Entry is registered in the first 8 blocks\n");
+//                for ( k = 0; k <=13; k++){
+//                    printf("%c", rd[ParentInode->BlockPointer[blockNO]*BLOCK_SIZE+entry_pos+k]);
+//                    (k==13)?(printf("\n")):(printf(""));
+//                }
 #endif
         }
         else if (blockNO>7 && blockNO<=7+64) {
@@ -478,12 +478,12 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 			write_dir_entry(&rd[(*((uint32_t*)(rd+ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4)))*BLOCK_SIZE+entry_pos], NewDirEntry);
 
 #ifdef UL_DEBUG
-                printf("Entry is registered in the 9th block\n");
-				printf("The block is %d\n",(*((uint32_t*)(rd+ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4))));
-                for ( k = 0; k <=13; k++){
-                    printf("%c", rd[(*((uint32_t*)(rd+ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4)))*BLOCK_SIZE+entry_pos+k]);
-                    (k==13)?(printf("\n")):(printf(""));
-                }
+//                printf("create_dir: Entry is registered in the 9th block\n");
+//				printf("create_dir: The block is %d\n",(*((uint32_t*)(rd+ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4))));
+//                for ( k = 0; k <=13; k++){
+//                    printf("%c", rd[(*((uint32_t*)(rd+ParentInode->BlockPointer[8]*BLOCK_SIZE+(blockNO-8)*4)))*BLOCK_SIZE+entry_pos+k]);
+//                    (k==13)?(printf("\n")):(printf(""));
+//                }
 #endif
         }
         else if (blockNO>7+64 && blockNO<=7+64+64*64) {
@@ -496,14 +496,14 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         }
         else{
 #ifdef UL_DEBUG
-            printf("Block # is smaller than 0 or bigger than the limit!\n");
+//            printf("create_dir: Block # is smaller than 0 or bigger than the limit!\n");
 #endif
         }
             
         ParentInode->size += 16;
         update_inode(rd, ParentInodeNO, ParentInode);
 #ifdef UL_DEBUG
-        printf("Update: ParentInode size is %d.\n", ParentInode->size);
+//        printf("create_dir: Update: ParentInode size is %d.\n", ParentInode->size);
 #endif
 		partial_update_superblock(rd);
         return 0;
@@ -516,7 +516,7 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
 {
     if (strlen(name) >= 14) {
 #ifdef UL_DEBUG
-        printf("File name is toooooo long!\n");
+        printf("remove_file: File name is toooooo long!\n");
 #endif
         return(-1);
     }
@@ -551,6 +551,10 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
 		fprintf(stderr,"No mem space!\n");
 		exit(-1);
 	}
+#ifdef UL_DEBUG
+//    read_superblock(rd, SuperBlock);
+//    printf("remove_file: Free blocks: %d; Free inodes: %d.\n", SuperBlock->FreeBlockNum, SuperBlock->FreeInodeNum);
+#endif
 
     read_inode(rd, ParentInodeNO, ParentInode);
     read_inode(rd, InodeNO, Inode);
@@ -574,20 +578,23 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
             read_block_tableNO = Inode->BlockPointer[8];
             read_blockNO = *((uint32_t*)(rd+read_block_tableNO*BLOCK_SIZE+(i-8)*4));
             clr_bitmap(rd, read_blockNO);
+            clr_bitmap(rd, read_block_tableNO);
         }
         else if (i>7+64 && i<=7+64+64*64) {
             read_double_tableNO = Inode->BlockPointer[9];
             read_block_tableNO = *((uint32_t*)(rd+read_double_tableNO*BLOCK_SIZE+(i-(8+64))*4/64));
             read_blockNO = *((uint32_t*)(rd+read_block_tableNO*BLOCK_SIZE+((i-(8+64))%64)*4));
             clr_bitmap(rd, read_blockNO);
+            clr_bitmap(rd, read_block_tableNO);
+            clr_bitmap(rd, read_double_tableNO);
         }
     }
     
     // Find the entry that need to be deleted in the Parent directory
-    //blockNO = ParentInode->size/BLOCK_SIZE;
-    entryNO = ParentInode->size/ENTRY_SIZE;
+    blockNO = ParentInode->size/BLOCK_SIZE;
 #ifdef UL_DEBUG
-    printf("The total entry NO is %d.\n", entryNO);
+    entryNO = ParentInode->size/ENTRY_SIZE;
+//    printf("remove_file: The total entry NO is %d.\n", entryNO);
 #endif
     for (i=0;i<=blockNO;i++) {
         if (i>=0 && i<=7) {
@@ -595,13 +602,13 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
                 read_blockNO = ParentInode->BlockPointer[i];
                 read_dir_entry(&rd[read_blockNO*BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
 #ifdef UL_DEBUG
-                    printf("The entry name is %s.\n", ParentDirEntry->filename);
+//                    printf("remove_file: The entry name is %s.\n", ParentDirEntry->filename);
 #endif
                 if (strcmp(ParentDirEntry->filename, name)==0){
                     deleted_blockNO=i;
                     deleted_entryNO=i*16+j+1;
 #ifdef UL_DEBUG
-                    printf("The entry need to be deleted is %d.\nFrom the first 8 blocks.\n", deleted_entryNO);
+//                    printf("remove_file: The entry need to be deleted is %d.\nFrom the first 8 blocks.\n", deleted_entryNO);
 #endif
                     break;
                 }
@@ -635,14 +642,16 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
     }
     // Now ParentDirEntry should contain the entry that should be deleted
 #ifdef UL_DEBUG
-    printf("The entry we want to delete is %d.\n", deleted_entryNO);
+//    printf("remove_file: The entry we want to delete is %d.\n", deleted_entryNO);
 #endif
     int delete_flag=delete_dir_entry(rd, ParentInode, ParentInodeNO, deleted_entryNO);
     if (delete_flag == -1)
         return(-1);
     partial_update_superblock(rd);
 #ifdef UL_DEBUG
-    printf("The entry we deleted is %d.\n", deleted_entryNO);
+//    printf("remove_file: The entry we deleted is %d.\n", deleted_entryNO);
+//    read_superblock(rd, SuperBlock);
+//    printf("remove_file: Free blocks: %d; Free inodes: %d.\n", SuperBlock->FreeBlockNum, SuperBlock->FreeInodeNum);
 #endif
     return 0;
 }
@@ -651,7 +660,7 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
 {
     if (strlen(name) >= 14) {
 #ifdef UL_DEBUG
-        printf("File name is toooooo long!\n");
+        printf("remove_dir: File name is toooooo long!\n");
 #endif
         return(-1);
     }
@@ -704,17 +713,29 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
 
     // Delete all the files inside the folder
     fileNO = Inode->size/ENTRY_SIZE;
-    for (i=0;i<fileNO;i++) {
 #ifdef UL_DEBUG
-        printf("Need to delete the children files.\n");
+//        printf("remove_dir: The inode size is %d.\n",Inode->size);
 #endif
-        temp = (i+1)/16;
-        if (temp - (int)temp >0) 
+    for (i=fileNO-1;i>=0;i--) {
+#ifdef UL_DEBUG
+//        printf("remove_dir: Need to delete the children files.\n");
+#endif
+        temp = (double)i/16;
+#ifdef UL_DEBUG
+//        printf("remove_dir: Temp is %lf. \n", temp-(int)temp);
+#endif
+        if ((temp - (int)temp >0) || (temp == 0))
+        {
             blockNO_file = (int)temp;
+        }
         else
             blockNO_file = (int)temp-1;
+#ifdef UL_DEBUG
+//        printf("remove_dir: BlockNO_file is %d.\n", blockNO_file);
+#endif
         if (blockNO_file>=0 && blockNO_file<=7) {
             read_blockNO = Inode->BlockPointer[blockNO_file];
+            //read_dir_entry(&rd[last_entry_blockNO*BLOCK_SIZE+((last_entryNO-1)%16)*16], last_entry);
             read_dir_entry(&rd[read_blockNO*BLOCK_SIZE+i*ENTRY_SIZE], DeleteEntry);
         }
         else if (blockNO_file>7 && blockNO_file<=7+64) {
@@ -733,10 +754,16 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
         read_inode(rd, DeleteEntry->InodeNo, DeleteInode);
         if (DeleteInode->type == 1)
         {
+#ifdef UL_DEBUG
+//    printf("remove_dir: Delete one file.\n");
+#endif
             remove_file(rd, InodeNO, DeleteEntry->InodeNo, DeleteEntry->filename);
         }
         else 
         {
+#ifdef UL_DEBUG
+//    printf("remove_dir: Delete one dir.\n");
+#endif
             remove_dir(rd, InodeNO, DeleteEntry->InodeNo, DeleteEntry->filename);
         }
     }
@@ -758,20 +785,24 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
             read_block_tableNO = Inode->BlockPointer[8];
             read_blockNO = *((uint32_t*)(rd+read_block_tableNO*BLOCK_SIZE+(i-8)*4));
             clr_bitmap(rd,read_blockNO);
+            clr_bitmap(rd,read_block_tableNO);
         }
         else if (i>7+64 && i<=7+64+64*64) {
             read_double_tableNO = Inode->BlockPointer[9];
             read_block_tableNO = *((uint32_t*)(rd+read_double_tableNO*BLOCK_SIZE+(i-(8+64))*4/64));
             read_blockNO = *((uint32_t*)(rd+read_block_tableNO*BLOCK_SIZE+((i-(8+64))%64)*4));
             clr_bitmap(rd,read_blockNO);
+            clr_bitmap(rd,read_block_tableNO);
+            clr_bitmap(rd,read_double_tableNO);
         }
     }
     
     // Find the entry that need to be deleted in the Parent directory
 
+    block_NO = ParentInode->size/BLOCK_SIZE;
     entryNO = ParentInode->size/ENTRY_SIZE;
 #ifdef UL_DEBUG
-    printf("The total entry NO is %d.\n", entryNO);
+//    printf("remove_dir: The total entry NO is %d.\n", entryNO);
 #endif
     for (i=0;i<=blockNO;i++) {
         if (i>=0 && i<=7) {
@@ -779,13 +810,13 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
                 read_blockNO=ParentInode->BlockPointer[i];
                 read_dir_entry(&rd[read_blockNO*BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
 #ifdef UL_DEBUG
-                    printf("The entry name is %s.\n", ParentDirEntry->filename);
+//                    printf("remove_dir: The entry name is %s.\n", ParentDirEntry->filename);
 #endif
                 if (strcmp(ParentDirEntry->filename, name)==0){
                     deleted_blockNO=i;
                     deleted_entryNO=i*16+j+1;
 #ifdef UL_DEBUG
-                    printf("The entry need to be deleted is %d.\nFrom the first 8 blocks.\n", deleted_entryNO);
+//                    printf("remove_dir: The entry need to be deleted is %d.\nFrom the first 8 blocks.\n", deleted_entryNO);
 #endif
                     break;
                 }
@@ -849,7 +880,7 @@ int delete_dir_entry(uint8_t* rd, struct inode* ParentInode, uint16_t ParentInod
     {
         last_entry_blockNO = ParentInode->BlockPointer[(int)(last_entryNO-1)/16];
 #ifdef UL_DEBUG
-        printf("The last entry %d is in block#%d.\n", last_entryNO, last_entry_blockNO);
+//        printf("The last entry %d is in block#%d.\n", last_entryNO, last_entry_blockNO);
 #endif
         if (last_entryNO%16 == 1)
             clr_bitmap(rd, last_entry_blockNO);
@@ -859,7 +890,7 @@ int delete_dir_entry(uint8_t* rd, struct inode* ParentInode, uint16_t ParentInod
         last_entry_block_tableNO = ParentInode->BlockPointer[8]; 
         last_entry_blockNO = *((uint32_t*)(rd+last_entry_block_tableNO*BLOCK_SIZE+((int)((last_entryNO-1)/16)-8)*4));
 #ifdef UL_DEBUG
-        printf("The last entry %d is in block#%d.\n", last_entryNO, last_entry_blockNO);
+//        printf("The last entry %d is in block#%d.\n", last_entryNO, last_entry_blockNO);
 #endif
         if (last_entryNO%16 == 1)
             clr_bitmap(rd, last_entry_blockNO);
@@ -870,7 +901,7 @@ int delete_dir_entry(uint8_t* rd, struct inode* ParentInode, uint16_t ParentInod
         last_entry_block_tableNO = *((uint32_t*)(rd+last_entry_double_tableNO*BLOCK_SIZE+(((last_entryNO-1)/16-(8+64))/64)*4));
         last_entry_blockNO = *((uint32_t*)(rd+last_entry_block_tableNO*BLOCK_SIZE+(((last_entryNO-1)/16-(8+64))%64)*4));
 #ifdef UL_DEBUG
-        printf("The last entry %d is in block#%d.\n", last_entryNO, last_entry_blockNO);
+//        printf("The last entry %d is in block#%d.\n", last_entryNO, last_entry_blockNO);
 #endif
         if (last_entryNO%16 == 1)
             clr_bitmap(rd, last_entry_blockNO);
@@ -880,8 +911,9 @@ int delete_dir_entry(uint8_t* rd, struct inode* ParentInode, uint16_t ParentInod
     if (last_entryNO == deleted_entryNO)
     {
 #ifdef UL_DEBUG
-        printf("Need to delete the last entry\n");
+//        printf("Need to delete the last entry\n");
 #endif
+        clear_dir_entry(&rd[last_entry_blockNO*BLOCK_SIZE+((last_entryNO-1)%16)*16]);
         ParentInode->size -= 16;
         update_inode(rd, ParentInodeNO, ParentInode);
         return 0;
@@ -892,7 +924,7 @@ int delete_dir_entry(uint8_t* rd, struct inode* ParentInode, uint16_t ParentInod
         {
             deleted_entry_blockNO = ParentInode->BlockPointer[(int)((deleted_entryNO-1)/16)];
 #ifdef UL_DEBUG
-            printf("The delete entry %d is in block#%d.\n", deleted_entryNO, deleted_entry_blockNO);
+//            printf("The delete entry %d is in block#%d.\n", deleted_entryNO, deleted_entry_blockNO);
 #endif
         }
         else if (deleted_entryNO>8*16 && deleted_entryNO<=(8+64)*16)
@@ -900,7 +932,7 @@ int delete_dir_entry(uint8_t* rd, struct inode* ParentInode, uint16_t ParentInod
             deleted_entry_block_tableNO = ParentInode->BlockPointer[8]; 
             deleted_entry_blockNO = *((uint32_t*)(rd+deleted_entry_block_tableNO*BLOCK_SIZE+((int)((deleted_entryNO-1)/16)-8)*4));
 #ifdef UL_DEBUG
-            printf("The delete entry %d is in block#%d.\n", deleted_entryNO, deleted_entry_blockNO);
+//            printf("The delete entry %d is in block#%d.\n", deleted_entryNO, deleted_entry_blockNO);
 #endif
         }
         else if (deleted_entryNO>(8+64)*16 && deleted_entryNO<=(8+64+64*64)*16)
@@ -909,13 +941,13 @@ int delete_dir_entry(uint8_t* rd, struct inode* ParentInode, uint16_t ParentInod
             deleted_entry_block_tableNO = *((uint32_t*)(rd+deleted_entry_double_tableNO*BLOCK_SIZE+(((deleted_entryNO-1)/16-(8+64))/64)*4));
             deleted_entry_blockNO = *((uint32_t*)(rd+deleted_entry_block_tableNO*BLOCK_SIZE+(((deleted_entryNO-1)/16-(8+64))%64)*4));
 #ifdef UL_DEBUG
-            printf("The delete entry %d is in block#%d.\n", deleted_entryNO, deleted_entry_blockNO);
+//            printf("The delete entry %d is in block#%d.\n", deleted_entryNO, deleted_entry_blockNO);
 #endif
         }
         else 
         {
 #ifdef UL_DEBUG
-            printf("Where are you? The delete entry is %d.\n", deleted_entryNO);
+//            printf("delete_dir_entry: Where are you? The delete entry is %d.\n", deleted_entryNO);
 #endif
             return(-1);
         }
