@@ -49,6 +49,7 @@ int get_file_size (uint8_t* rd, uint16_t InodeNO)
 		vfree(Inode);
 #endif
 		return tmp; // return the size of the file 
+	}
 	else{
 #ifndef UL_DEBUG
 		vfree(Inode);
