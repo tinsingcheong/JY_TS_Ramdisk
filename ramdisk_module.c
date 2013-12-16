@@ -58,7 +58,7 @@ static struct file_operations ramdisk_proc_operations;
 static struct proc_dir_entry *proc_entry;
 
 static int __init initialization_routine(void) {
-  printk("<1> Loading module\n");
+  my_printk("<1> Loading module\n");
 
   ramdisk_proc_operations.ioctl = ramdisk_ioctl;
 
