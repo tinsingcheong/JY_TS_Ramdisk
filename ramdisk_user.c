@@ -197,7 +197,7 @@ int rd_readdir (int fd, char *address)
 	rd_args.file_pos=fd_table[fd].file_pos;
     ioctl(ioctl_rd_fd, RD_READDIR, &rd_args);
 	fd_table[fd].file_pos+=rd_args.ret;
-	printf("finish reading dir ,ret value is %d\n",rd_args.ret);
+	printf("finish reading dir ,ret value is %d new file pos is %d\n",rd_args.ret,	fd_table[fd].file_pos);
     return rd_args.ret;
 }
 
