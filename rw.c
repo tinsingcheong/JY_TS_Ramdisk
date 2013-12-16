@@ -460,6 +460,7 @@ int read_ramdisk(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf, int lengt
 #endif
 #ifndef UL_DEBUG
 		copy_to_user(buf+i,ptr,sizeof(uint8_t));
+		printk("<1> Read count: %d Reading %c\n",count,*ptr);
 #endif
 		count++;
 	}
@@ -533,6 +534,8 @@ int write_ramdisk(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf, int leng
 #endif
 #ifndef UL_DEBUG
 		copy_from_user(ptr,buf+i,sizeof(uint8_t));
+		printk("<1> Write count: %d writing %c\n",count,*ptr);
+
 #endif
 	//	printf("Copy finished\n");
 	//	fflush(stdout);
