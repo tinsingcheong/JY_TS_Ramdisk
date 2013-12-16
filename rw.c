@@ -207,6 +207,9 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 			return_val=rd+file_inode->BlockPointer[block_num]*RD_BLOCK_SIZE;
 			file_inode->size++;
 			update_inode(rd,inodeNO,file_inode);
+#ifndef UL_DEBUG
+			vfree(file_inode);
+#endif
 			return return_val;
 		}
 		else if(size_region_type==1){
@@ -240,6 +243,10 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 			return_val=rd+cur_direct_pointer*RD_BLOCK_SIZE;
 			file_inode->size++;
 			update_inode(rd,inodeNO,file_inode);
+#ifndef UL_DEBUG
+			vfree(file_inode);
+#endif
+
 			return return_val;
 		}
 		else if(size_region_type==2){
@@ -260,6 +267,10 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 			return_val=rd+cur_direct_pointer*RD_BLOCK_SIZE;
 			file_inode->size++;
 			update_inode(rd,inodeNO,file_inode);
+#ifndef UL_DEBUG
+			vfree(file_inode);
+#endif
+
 			return return_val;
 		}
 		else if(size_region_type==3){
@@ -305,6 +316,10 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 			return_val=rd+cur_direct_pointer*RD_BLOCK_SIZE;
 			file_inode->size++;
 			update_inode(rd,inodeNO,file_inode);
+#ifndef UL_DEBUG
+			vfree(file_inode);
+#endif
+
 			return return_val;
 		}
 		else if(size_region_type==4){
@@ -342,6 +357,10 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 				return_val=rd+cur_direct_pointer*RD_BLOCK_SIZE;
 				file_inode->size++;
 				update_inode(rd,inodeNO,file_inode);
+#ifndef UL_DEBUG
+				vfree(file_inode);
+#endif
+
 				return return_val;
 			}
 			else{
@@ -364,6 +383,10 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 				return_val=rd+cur_direct_pointer*RD_BLOCK_SIZE;
 				file_inode->size++;
 				update_inode(rd,inodeNO,file_inode);
+#ifndef UL_DEBUG
+				vfree(file_inode);
+#endif
+
 				return return_val;
 			}
 		}
