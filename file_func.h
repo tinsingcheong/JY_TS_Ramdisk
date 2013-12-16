@@ -14,13 +14,10 @@
 #endif
 
 int get_file_size (uint8_t* rd, uint16_t InodeNO);
-int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name, struct mode_t mode);
+int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name);
 int create_dir (uint8_t* rd, uint16_t ParentDirInode, char* name);
 int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* name);
 int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* name);
 int delete_dir_entry(uint8_t* rd, struct rd_inode* ParentInode, uint16_t ParentInodeNO, int delete_blockNO);
 int find_same_name(uint8_t* rd, struct rd_inode* ParentInode,char* name);
-// Access rights begin
-int chmod_reg_file(uint8_t* rd, struct rd_inode* Inode, mode_t mode);
-// Access rights end
 #endif

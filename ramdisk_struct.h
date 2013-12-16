@@ -18,10 +18,6 @@ struct rd_super_block{
 
 struct rd_inode{
 	uint8_t type;//1 is regular file, 0 is dir file
-    // Access rights begin
-    uint8_t write; // 0: writable; 1: couldnt be written
-    uint8_t read; // 0: readable; 1: couldnt be read
-    // Access rights end
 	uint32_t size;
 	uint32_t BlockPointer[10];
 };
