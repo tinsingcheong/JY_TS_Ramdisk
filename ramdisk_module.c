@@ -138,6 +138,7 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 	char File[14];
 	int ParentInodeNO;
 	uint8_t* buf;
+	int size;
 	switch (cmd){
 
 	case RD_CREATE:
@@ -183,7 +184,18 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 
 	case RD_LSEEK:
 		copy_from_user(&ioc, (struct ramdisk_ops_arg_list*)arg, sizeof(struct ramdisk_ops_arg_list));
-        ioc.ret=get_file_size(rd, ioc.inodeNO);
+        size=get_file_size(rd, ioc.inodeNO);
+		if(size>ioc.length){
+			//ioc.length=ioc.length;
+			ioc.ret=0;
+		}
+		else if(size<=ioc.length && size>=0;){
+			ioc.length=-1;//end of file
+			ioc.ret=-1;
+		}
+		else if(size<0){
+			ioc.ret=-1;
+		}
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
 		break;
 

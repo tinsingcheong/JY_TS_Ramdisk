@@ -29,6 +29,7 @@
 int get_file_size (uint8_t* rd, uint16_t InodeNO)
 {
     struct rd_inode* Inode;
+	int tmp;
 #ifdef UL_DEBUG
 	if(!(Inode=(struct rd_inode*)malloc(sizeof(struct rd_inode)))){
 		printf(" NO mem\n");
@@ -42,7 +43,18 @@ int get_file_size (uint8_t* rd, uint16_t InodeNO)
 	}
 #endif
     read_inode(rd, InodeNO, Inode);
-    return Inode->size; // return the size of the file 
+	if(Inode->type==1){
+		tmp=Inode->size;
+#ifndef UL_DEBUG
+		vfree(Inode);
+#endif
+		return tmp; // return the size of the file 
+	else{
+#ifndef UL_DEBUG
+		vfree(Inode);
+#endif
+		return -1;//dir file should return -1
+	}
 }
 
 int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)

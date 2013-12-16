@@ -148,8 +148,18 @@ int rd_lseek (int fd, int offset)
     rd_args.buf_len = offset;
     rd_args.pos     = fd_table[fd].file_pos;
     ioctl(ioctl_rd_fd, RD_LSEEK, &rd_args);
+	fd_table[fd].file_pos=rd_args.buf_len;
+	offset=rd_args.buf_len;
 
-    return rd_args.ret; // Success: Return the new position or the end of the file
+	return rd_args.ret;
+/*	//rd_args.ret will be the file size
+	if(rd_args.ret<=offset)
+	  return -1;
+	else
+	  return offset; // Success: Return the new position or the end of the file
+*/
+
+//    return rd_args.ret; // Success: Return the new position or the end of the file
 }
 
 int rd_unlink (char *pathname)
