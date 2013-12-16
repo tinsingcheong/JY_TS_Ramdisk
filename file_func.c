@@ -191,10 +191,10 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
                 }
             }
 
-            rd[ParentInode->BlockPointer[8]*RD_BLOCK_SIZE+(blockNO-8)*4] = (uint8_t)(new_block_id & 0x000000ff);
-            rd[ParentInode->BlockPointer[8]*RD_BLOCK_SIZE+(blockNO-8)*4+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
-            rd[ParentInode->BlockPointer[8]*RD_BLOCK_SIZE+(blockNO-8)*4+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
-            rd[ParentInode->BlockPointer[8]*RD_BLOCK_SIZE+(blockNO-8)*4+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
+  //          rd[ParentInode->BlockPointer[8]*RD_BLOCK_SIZE+(blockNO-8)*4] = (uint8_t)(new_block_id & 0x000000ff);
+    //        rd[ParentInode->BlockPointer[8]*RD_BLOCK_SIZE+(blockNO-8)*4+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
+      //      rd[ParentInode->BlockPointer[8]*RD_BLOCK_SIZE+(blockNO-8)*4+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
+        //    rd[ParentInode->BlockPointer[8]*RD_BLOCK_SIZE+(blockNO-8)*4+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
 #ifdef UL_DEBUG
 //            printf("File is registered in the 9th block\n");
 #endif
