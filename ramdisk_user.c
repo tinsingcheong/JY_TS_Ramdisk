@@ -213,7 +213,7 @@ int fd_find_pathname(struct file_object* table, char *pathname)
     int i;
     for (i=0;i<1024;i++)
     {
-		printf("i=%d\n",i);
+		//printf("i=%d\n",i);
 		fflush(stdout);
         if ((strcmp(table[i].pathname, pathname)==0) && table[i].valid == 1)
             return 0;

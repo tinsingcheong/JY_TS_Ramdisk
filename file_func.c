@@ -328,6 +328,13 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         printf("Update: ParentInode size is %d.\n", ParentInode->size);
 #endif
 		partial_update_superblock(rd);
+
+#ifndef UL_DEBUG
+		vfree(SuperBlock);
+		vfree(Inode);
+		vfree(ParentInode);
+		vfree(NewDirEntry);
+#endif
         return 0;
     }    
     else
@@ -619,6 +626,13 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 
 
 		partial_update_superblock(rd);
+#ifndef UL_DEBUG
+		vfree(SuperBlock);
+		vfree(Inode);
+		vfree(ParentInode);
+		vfree(NewDirEntry);
+#endif
+
         return 0;
     }    
     else
@@ -791,6 +805,13 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
 //    read_superblock(rd, SuperBlock);
 //    printf("remove_file: Free blocks: %d; Free inodes: %d.\n", SuperBlock->FreeBlockNum, SuperBlock->FreeInodeNum);
 #endif
+#ifndef UL_DEBUG
+		vfree(SuperBlock);
+		vfree(Inode);
+		vfree(ParentInode);
+		vfree(NewDirEntry);
+#endif
+
     return 0;
 }
 
@@ -1021,6 +1042,15 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
     if (delete_flag == -1)
         return(-1);
     partial_update_superblock(rd);
+#ifndef UL_DEBUG
+		vfree(SuperBlock);
+		vfree(Inode);
+		vfree(ParentInode);
+		vfree(NewDirEntry);
+		vfree(ParentDirEntry);
+		vfree(DeleteEntry);
+#endif
+
     return 0; // -1 means removal fails
 }
 
@@ -1132,6 +1162,9 @@ int delete_dir_entry(uint8_t* rd, struct rd_inode* ParentInode, uint16_t ParentI
         clear_dir_entry(&rd[last_entry_blockNO*RD_BLOCK_SIZE+((last_entryNO-1)%16)*16]);
         ParentInode->size -= 16;
         update_inode(rd, ParentInodeNO, ParentInode);
+#ifndef UL_DEBUG
+		vfree(last_entry);
+#endif
         return 0;
     } 
 
@@ -1198,5 +1231,8 @@ int find_same_name(uint8_t* rd, struct rd_inode* ParentInode, char* name)
             }
         }
     }
+#ifndef UL_DEBUG
+	vfree(ParentDirEntry);
+#endif
     return 0;
 }
