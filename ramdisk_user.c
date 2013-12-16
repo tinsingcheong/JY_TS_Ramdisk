@@ -193,7 +193,18 @@ int rd_readdir (int fd, char *address)
 
     rd_args.inodeNO = fd_table[fd].inodeNO;
     rd_args.buf     = address;
+    ioctl(ioctl_rd_fd, RD_READDIR, &rd_args);
     return rd_args.ret;
+}
+
+int rd_snyc( )
+{
+    printf("In rd_sync already!");
+
+    if (!ioctl_rd_fd)
+        ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
+    printf("Open ramdisk!");
+
 }
 
 int fd_search_fd(struct file_object* table, uint16_t InodeNO)
