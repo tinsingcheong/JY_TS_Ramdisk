@@ -12,18 +12,18 @@ int ioctl_rd_fd;
 int rd_create (char *pathname)
 {
     struct rd_ops_arg_list rd_args;
-    printf("In rd_create already!");
+    //printf("In rd_create already!");
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
-    printf("Open ramdisk!");
+    //printf("Open ramdisk!");
 
     rd_args.pathname = pathname;
     rd_args.path_len = strlen(pathname)+1;
 
-    printf("Create: Pass the struct to kernel!");
+    //printf("Create: Pass the struct to kernel!");
     ioctl(ioctl_rd_fd, RD_CREATE, &rd_args);
-    printf("Create: Return value is %d!", rd_args.ret);
+    //printf("Create: Return value is %d!", rd_args.ret);
     return rd_args.ret; 
 }
 
@@ -213,6 +213,8 @@ int fd_find_pathname(struct file_object* table, char *pathname)
     int i;
     for (i=0;i<1024;i++)
     {
+		printf("i=%d\n",i);
+		fflush(stdout);
         if ((strcmp(table[i].pathname, pathname)==0) && table[i].valid == 1)
             return 0;
     }
