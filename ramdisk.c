@@ -286,7 +286,9 @@ uint8_t* ramdisk_init(){
 	//Init the inode bitmap in superblock
 	set_inode_bitmap(ramdisk,0);
 
-
+#ifndef UL_DEBUG
+	vfree(root_inode);
+#endif
 	return ramdisk;	
 
 }
@@ -294,6 +296,7 @@ uint8_t* ramdisk_init(){
 int search_file(uint8_t* rd, char* path){
 	int i,j,k;
 	struct rd_path* path_list;
+	struct rd_path* path_tmp;
 	struct rd_path* path_root;
 	struct rd_path* path_leave;
 	char tmp[14];
@@ -623,6 +626,17 @@ int search_file(uint8_t* rd, char* path){
 		}
 
 	}
+#ifndef UL_DEBUG
+	path_list=path_root;
+	while(path_list){
+		path_tmp=path_list;
+		path_list=path_list->next;
+		vfree(path_tmp);
+	}
+	vfree(current_inode);
+	vfree(current_dir_entry);
+
+#endif
 	return current_inodeid;
 
 }
