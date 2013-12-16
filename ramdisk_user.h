@@ -1,6 +1,8 @@
 #ifndef USER_STRUCT_H
 #define USER_STRUCT_H
 
+#include<stdint.h>
+
 #define RD_CREATE  _IOWR(0,0,struct rd_ops_arg_list)
 #define RD_MKDIR   _IOWR(1,0,struct rd_ops_arg_list)
 #define RD_OPEN    _IOWR(2,0,struct rd_ops_arg_list)
@@ -17,7 +19,7 @@ struct file_object{
     char* pathname;
 };
 
-extern struct file_object fd_table[1024];
+struct file_object fd_table[1024];
 /*
 struct fd_table_entry{
 	int fd;

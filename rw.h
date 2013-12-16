@@ -1,8 +1,8 @@
 #ifndef RW_H
 #define RW_H
 
-#define KL_DEBUG
-#ifdef KL_DEBUG
+//#define KL_DEBUG
+#ifndef UL_DEBUG
 #include<linux/types.h>
 #endif
 

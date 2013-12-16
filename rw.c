@@ -3,9 +3,9 @@
 #include "constant.h"
 #include "ramdisk.h"
 
-#define KL_DEBUG
+//#define KL_DEBUG
 
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/errno.h> /* error codes */
@@ -42,7 +42,7 @@ uint8_t* file_byte_locate(uint8_t* rd, uint16_t inodeNO, int pos){
 		exit(-1);
 	}
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 	if(!(file_inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
 		printk("<1> No memory space\n");
 		return NULL;
@@ -136,7 +136,7 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 		exit(-1);
 	}
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 	if(!(file_inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
 		printk("<1> No memory space\n");
 		return (-1);
@@ -196,7 +196,7 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #ifdef UL_DEBUG
 				printf("No free block for first %dth direct blocks\n",block_num);
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 				printk("<1> No free block for first %dth direct blocks\n",block_num);
 #endif
 				return NULL;
@@ -213,7 +213,7 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #ifdef UL_DEBUG
 				printf("No free block for the single indirect block\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 				printk("<1> No free block for the single indirect block\n");
 #endif
 
@@ -226,7 +226,7 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #ifdef UL_DEBUG
 				printf("No free block for the 0th direct block in single indirect block\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 				printk("<1> No free block for the 0th direct block in single indirect block\n");
 #endif
 
@@ -247,7 +247,7 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #ifdef UL_DEBUG
 				printf("No free block for the %dth direct block in single indirect block\n",block_num-8);
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 				printk("<1> No free block for the %dth direct block in single indirect block\n",block_num-8);
 #endif
 
@@ -266,7 +266,7 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #ifdef UL_DEBUG
 				printf("No free block for the double indirect block\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 				printk("<1> No free block for the double indirect block\n");
 #endif
 
@@ -279,7 +279,7 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #ifdef UL_DEBUG
 				printf("No free block for the 1st single indirect block in the double indirect block\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 				printk("<1> No free block for the 1st single indirect block in the double indirect block\n");
 #endif
 
@@ -292,7 +292,7 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #ifdef UL_DEBUG
 				printf("No free block for the 1st direct block in the 1st single indirect block in the double indirect block\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 				printk("<1> No free block for the 1st direct block in the 1st single indirect block in the double indirect block\n");
 #endif
 
@@ -313,7 +313,7 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #ifdef UL_DEBUG
 					printf("No free block for the %dth single indirect block in the double indirect block\n",(block_num-72)/64);
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 					printk("<1> No free block for the %dth single indirect block in the double indirect block\n",(block_num-72)/64);
 #endif
 
@@ -328,7 +328,7 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 					printf("No free block for the 0th direct block in the %dth single indirect block in the double indirect block\n",
 								(block_num-72)/64);
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 					printk("<1> No free block for the 0th direct block in the %dth single indirect block in the double indirect block\n",
 								(block_num-72)/64);
 #endif
@@ -350,7 +350,7 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 					printf("No free block for the %dth direct block in the %dth single indirect block in the double indirect block\n",
 								(block_num-72)%64,(block_num-72)/64);
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 					printk("<1> No free block for the %dth direct block in the %dth single indirect block in the double indirect block\n",
 								(block_num-72)%64,(block_num-72)/64);
 #endif
@@ -370,7 +370,7 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #ifdef UL_DEBUG
 			printf("The largest possible of one file is reached\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 			printk("<1> The largest possible of one file is reached\n");
 #endif
 
@@ -401,7 +401,7 @@ int read_ramdisk(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf, int lengt
 		exit(-1);
 	}
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 	if(!(file_inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
 		printk("<1> No memory space\n");
 		return (-1);
@@ -413,7 +413,7 @@ int read_ramdisk(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf, int lengt
 #ifdef UL_DEBUG
 		printf("The file is dir file, which is unreadable\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 		printk("<1> The file is dir file, which is unreadable\n");
 #endif
 
@@ -426,7 +426,7 @@ int read_ramdisk(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf, int lengt
 #ifdef UL_DEBUG
 		*(buf+i)=*ptr;
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 		copy_to_user(buf+i,ptr,sizeof(uint8_t));
 #endif
 		count++;
@@ -450,7 +450,7 @@ int write_ramdisk(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf, int leng
 		exit(-1);
 	}
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 
 	if(!(file_inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
 		printk("<1> No memory space\n");
@@ -463,7 +463,7 @@ int write_ramdisk(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf, int leng
 #ifdef UL_DEBUG
 		printf("The file is dir file, which is unwritable\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 		printk("<1> The file is dir file, which is unwritable\n");
 #endif
 
@@ -474,7 +474,7 @@ int write_ramdisk(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf, int leng
 #ifdef UL_DEBUG
 		printf("The start pos is out of file size range\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 		printk("<1> The start pos is out of file size range\n");
 #endif
 
@@ -496,7 +496,7 @@ int write_ramdisk(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf, int leng
 #ifdef UL_DEBUG
 		*ptr=*(buf+i);
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 		copy_from_user(ptr,buf+i,sizeof(uint8_t));
 #endif
 	//	printf("Copy finished\n");
@@ -526,7 +526,7 @@ int readdir(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf){
 		exit(-1);
 	}
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 	if(!(file_inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
 		printk("<1> No memory space\n");
 		return (-1);
@@ -538,7 +538,7 @@ int readdir(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf){
 #ifdef UL_DEBUG
 		printf("The file is regular file, which is unreadable for readdir\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 		printk("<1> The file is regular file, which is unreadable for readdir\n");
 #endif
 
@@ -552,7 +552,7 @@ int readdir(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf){
 #ifdef UL_DEBUG
 		*(buf+i)=*ptr;
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 		copy_to_user(buf+i, ptr, sizeof(uint8_t));
 #endif
 		count++;

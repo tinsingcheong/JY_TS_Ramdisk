@@ -5,9 +5,9 @@
 
 //#define UL_DEBUG
 
-#define KL_DEBUG
+//#define KL_DEBUG
 
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/errno.h> /* error codes */
@@ -38,7 +38,7 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 #ifdef UL_DEBUG
         printf("File name is toooooo long!\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 		printk("<1> File name is toooooo long!\n");
 #endif
 
@@ -75,7 +75,7 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 		exit(-1);
 	}
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 	if(!(SuperBlock=(struct rd_super_block*)vmalloc(sizeof(struct rd_super_block)))){
 		printk("<1> No mem space!\n");
 		return (-1);
@@ -102,7 +102,7 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 #ifdef UL_DEBUG
             printf("There is no free inode anymore.\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
             printk("<1> There is no free inode anymore.\n");
 #endif
 
@@ -118,9 +118,12 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         // Update the Parent Inode information
         read_inode(rd, ParentInodeNO, ParentInode);
 
-        if (find_same_name(rd, ParentInode) == -1)
+        if (find_same_name(rd, ParentInode,name) == -1){
+#ifdef UL_DEBUG
+			printf("Find the same name!\n");
+#endif
             return(-1);
-        
+		}
 #ifdef UL_DEBUG
 //        printf("Read: ParentInode size is %d.\n", ParentInode->size);
 #endif
@@ -136,7 +139,7 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 #ifdef UL_DEBUG
                 printf("There is no free block anymore.\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
                 printk("<1> There is no free block anymore.\n");
 #endif
 
@@ -166,7 +169,7 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 #ifdef UL_DEBUG
                         printf("There is no free block anymore.\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
                         printk("<1> There is no free block anymore.\n");
 #endif
 
@@ -203,7 +206,7 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 #ifdef UL_DEBUG
                         printf("There is no free block anymore.\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
                         printk("<1> There is no free block anymore.\n");
 #endif
 
@@ -217,7 +220,7 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 #ifdef UL_DEBUG
                         printf("There is no free block anymore.\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
                         printk("<1> There is no free block anymore.\n");
 #endif
 
@@ -239,7 +242,7 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 #ifdef UL_DEBUG
                         printf("There is no free block anymore.\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
                         printk("<1> There is no free block anymore.\n");
 #endif
 
@@ -336,7 +339,7 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 #ifdef UL_DEBUG
         printf("File name is toooooo long!\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
         printk("<1> File name is toooooo long!\n");
 #endif
 
@@ -374,7 +377,7 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 		exit(-1);
 	}
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 	if(!(SuperBlock=(struct rd_super_block*)vmalloc(sizeof(struct rd_super_block)))){
 		printk("<1> No mem space!\n");
 		return (-1);
@@ -395,6 +398,10 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 
 
 	read_superblock(rd, SuperBlock);
+#ifdef UL_DEBUG
+  //  printf("FREE inodes %d Free blocks %d\n", SuperBlock->FreeInodeNum, SuperBlock->FreeBlockNum);
+#endif
+
     if (SuperBlock->FreeBlockNum != 0 && SuperBlock->FreeInodeNum != 0)
     {
         InodeNO = find_next_free_inode(rd);
@@ -405,7 +412,7 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
             return(-1);
         }
 #ifdef UL_DEBUG
-//        printf("create_dir: Acquired Inode is %u.\n", InodeNO);
+ //       printf("create_dir: Acquired Inode is %u.\n", InodeNO);
 #endif
         set_inode_bitmap(rd, InodeNO);
         Inode->type = (uint8_t) 0x0; // Initialize the type as regular file
@@ -413,13 +420,19 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         update_inode(rd, InodeNO, Inode); // Update the new Inode
         // Update the Parent Inode information
         read_inode(rd, ParentInodeNO, ParentInode);
-
-        if (find_same_name(rd, ParentInode) == -1)
-            return(-1);
-
 #ifdef UL_DEBUG
-//        printf("create_dir: Read: ParentInode size is %d.\n", ParentInode->size);
+    //    printf("create_dir0: Read: ParentInode size is %d.\n", ParentInode->size);
 #endif
+        if (find_same_name(rd, ParentInode, name) == -1){
+#ifdef UL_DEBUG
+			printf("Find the same name!\n");
+#endif
+            return(-1);
+		}
+#ifdef UL_DEBUG
+    //    printf("create_dir1: Read: ParentInode size is %d.\n", ParentInode->size);
+#endif
+
         temp = (double)(ParentInode->size)/RD_BLOCK_SIZE;
         if (temp - (int)temp > 0) { // if the current blocks are not filled up
             blockNO = (int)temp;
@@ -447,7 +460,7 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 
             rd[ParentInode->BlockPointer[blockNO]*RD_BLOCK_SIZE+ParentInode->size%RD_BLOCK_SIZE] = new_block_id;
 #ifdef UL_DEBUG
-//            printf("create_dir: File is registered in the first 8 blocks\n");
+ //           printf("create_dir: File is registered in the first 8 blocks\n");
 #endif
         }
         else if (blockNO > 7 && blockNO <= 7+64){
@@ -552,8 +565,9 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         
         entry_pos=ParentInode->size%RD_BLOCK_SIZE; // the position that the entry should be written to 
 #ifdef UL_DEBUG
-//                printf("create_dir: Entry position is %d.\n",entry_pos);
+        //        printf("create_dir2: ParentInode size is %d Entry position is %d.\n",ParentInode->size, entry_pos);
 #endif
+
         strcpy(NewDirEntry->filename,name);
         NewDirEntry->InodeNo = InodeNO;
 #ifdef UL_DEBUG
@@ -599,8 +613,10 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         ParentInode->size += 16;
         update_inode(rd, ParentInodeNO, ParentInode);
 #ifdef UL_DEBUG
-//        printf("create_dir: Update: ParentInode size is %d.\n", ParentInode->size);
+     //   printf("create_dir3: Update: ParentInode size %d is %d.\n", ParentInodeNO, ParentInode->size);
 #endif
+
+
 		partial_update_superblock(rd);
         return 0;
     }    
@@ -614,7 +630,7 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
 #ifdef UL_DEBUG
         printf("remove_file: File name is toooooo long!\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
         printk("<1> remove_file: File name is toooooo long!\n");
 #endif
 
@@ -652,7 +668,7 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
 		exit(-1);
 	}
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 	if(!(SuperBlock=(struct rd_super_block*)vmalloc(sizeof(struct rd_super_block)))){
 		printk("<1> No mem space!\n");
 		return (-1);
@@ -712,12 +728,12 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
     }
     
     // Find the entry that need to be deleted in the Parent directory
-    blockNO = ParentInode->size/RD_BLOCK_SIZE;
+    blockNO = (ParentInode->size%RD_BLOCK_SIZE)?(ParentInode->size/RD_BLOCK_SIZE+1):ParentInode->size/RD_BLOCK_SIZE;
 #ifdef UL_DEBUG
     entryNO = ParentInode->size/ENTRY_SIZE;
 //    printf("remove_file: The total entry NO is %d.\n", entryNO);
 #endif
-    for (i=0;i<=blockNO;i++) {
+    for (i=0;i<blockNO;i++) {
         if (i>=0 && i<=7) {
             for (j=0;j<16;j++) {
                 read_blockNO = ParentInode->BlockPointer[i];
@@ -783,7 +799,7 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
 #ifdef UL_DEBUG
         printf("remove_dir: File name is toooooo long!\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
         printk("<1> remove_dir: File name is toooooo long!\n");
 #endif
         return(-1);
@@ -832,7 +848,7 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
 		exit(-1);
 	}
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 	if(!(SuperBlock=(struct rd_super_block*)vmalloc(sizeof(struct rd_super_block)))){
 		printk("<1> No mem space!\n");
 		return (-1);
@@ -952,12 +968,12 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
     
     // Find the entry that need to be deleted in the Parent directory
 
-    blockNO = ParentInode->size/RD_BLOCK_SIZE;
+    blockNO = (ParentInode->size%RD_BLOCK_SIZE)?(ParentInode->size/RD_BLOCK_SIZE+1):ParentInode->size/RD_BLOCK_SIZE;
     entryNO = ParentInode->size/ENTRY_SIZE;
 #ifdef UL_DEBUG
 //    printf("remove_dir: The total entry NO is %d.\n", entryNO);
 #endif
-    for (i=0;i<=blockNO;i++) {
+    for (i=0;i<blockNO;i++) {
         if (i>=0 && i<=7) {
             for (j=0;j<16;j++) {
                 read_blockNO=ParentInode->BlockPointer[i];
@@ -1028,7 +1044,7 @@ int delete_dir_entry(uint8_t* rd, struct rd_inode* ParentInode, uint16_t ParentI
 		exit(-1);
 	}
 #endif
-#ifdef KL_DEBUG   
+#ifndef UL_DEBUG   
 	if(!(last_entry=(struct dir_entry*)vmalloc(sizeof(struct dir_entry)))){
 		printk("<1> No mem space!\n");
 		return (-1);
@@ -1122,20 +1138,39 @@ int delete_dir_entry(uint8_t* rd, struct rd_inode* ParentInode, uint16_t ParentI
 
 }
 
-int find_same_name(uint8_t* rd, struct rd_inode* ParentInode)
+int find_same_name(uint8_t* rd, struct rd_inode* ParentInode, char* name)
 {
+
     int blockNO;
     int read_blockNO;
     int read_block_tableNO;
     int read_double_tableNO;
     int i,j;
     struct dir_entry* ParentDirEntry;
-    blockNO = ParentInode->size/RD_BLOCK_SIZE;
-    for (i=0;i<=blockNO;i++) {
+#ifdef UL_DEBUG
+	if(!(ParentDirEntry=(struct dir_entry*)malloc(sizeof(struct dir_entry)))){
+		fprintf(stderr, "No space \n");
+		exit(-1);
+	}
+#endif
+#ifndef UL_DEBUG
+	if(!(ParentDirEntry=(struct dir_entry*)vmalloc(sizeof(struct dir_entry)))){
+		printk( "No space \n");
+		return 0;
+	}
+#endif
+    blockNO = (ParentInode->size%RD_BLOCK_SIZE)?(ParentInode->size/RD_BLOCK_SIZE+1):ParentInode->size/RD_BLOCK_SIZE;
+#ifdef UL_DEBUG
+	printf("comparing\n");
+
+#endif
+    for (i=0;i<blockNO;i++) {
+		//printf("i=%d, j=%d\n ",i,j, ParentDirEntry-);
         if (i>=0 && i<=7) {
             for (j=0;j<16;j++) {
                 read_blockNO = ParentInode->BlockPointer[i];
                 read_dir_entry(&rd[read_blockNO*RD_BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
+				//printf("i=%d ,j=%d, %s, %s\n",i,j,ParentDirEntry->filename, name);
                 if (strcmp(ParentDirEntry->filename, name)==0){
                     return(-1);
                 }
@@ -1144,9 +1179,12 @@ int find_same_name(uint8_t* rd, struct rd_inode* ParentInode)
         else if (i>7 && i<=7+64) {
             for (j=0;j<16;j++) {
                 read_block_tableNO = ParentInode->BlockPointer[8];
-                read_blockNO = *((uint32_t*)(rd+read_block_tableNO*RD_BLOCK_SIZE+(i-8)*4));
-                read_dir_entry(&rd[read_blockNO*RD_BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
-                if (strcmp(ParentDirEntry->filename, name)==0)
+		//		printf("1 %d \n",read_block_tableNO);
+				read_blockNO = *((uint32_t*)(rd+read_block_tableNO*RD_BLOCK_SIZE+(i-8)*4));
+          //      printf("2 %d %d \n",read_blockNO,read_blockNO*RD_BLOCK_SIZE+j*ENTRY_SIZE);
+				read_dir_entry(&rd[read_blockNO*RD_BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
+            //    printf("3\n");
+				if (strcmp(ParentDirEntry->filename, name)==0)
                     return(-1);
             }
         }

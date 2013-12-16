@@ -9,7 +9,7 @@
 #include <linux/types.h>
 #include <linux/string.h>
 
-#define KL_DEBUG
+//#define KL_DEBUG
 //#include "constant.h"
 #include "file_func.h"
 #include "ramdisk.h"
@@ -21,7 +21,7 @@
 MODULE_LICENSE("GPL");
 
 /* attribute structures */
-struct rd_ops_arg_list {
+struct ramdisk_ops_arg_list {
   uint8_t* pathname;
   int pathname_len;
 
@@ -42,8 +42,9 @@ struct rd_ops_arg_list {
 #define OPEN    _IOWR(2,0,struct ramdisk_ops_arg_list)
 #define READ    _IOWR(3,0,struct ramdisk_ops_arg_list)
 #define WRITE   _IOWR(4,0,struct ramdisk_ops_arg_list)
-#define UNLINK  _IOWR(5,0,struct ramdisk_ops_arg_list)
-#define READDIR _IOWR(6,0,struct ramdisk_ops_arg_list)
+#define LSEEK   _IOWR(5,0,struct ramdisk_ops_arg_list)
+#define UNLINK  _IOWR(6,0,struct ramdisk_ops_arg_list)
+#define READDIR _IOWR(7,0,struct ramdisk_ops_arg_list)
 
 static uint8_t* rd;
 
@@ -166,6 +167,12 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 	case WRITE:
 		copy_from_user(&ioc, (struct ramdisk_ops_arg_list*)arg, sizeof(struct ramdisk_ops_arg_list));
 		ioc.ret=write_ramdisk(rd, ioc.inodeNO, ioc.pos, ioc.buf, ioc.length);
+		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
+		break;
+
+	case LSEEK:
+		copy_from_user(&ioc, (struct ramdisk_ops_arg_list*)arg, sizeof(struct ramdisk_ops_arg_list));
+        ioc.ret=get_file_size(rd, ioc.inodeNO);
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
 		break;
 

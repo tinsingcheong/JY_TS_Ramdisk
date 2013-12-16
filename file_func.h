@@ -4,8 +4,8 @@
 
 #include "ramdisk_struct.h"
 
-#define KL_DEBUG
-#ifdef KL_DEBUG
+//#define KL_DEBUG
+#ifndef UL_DEBUG
 #include <linux/types.h>
 #endif
 
@@ -19,5 +19,5 @@ int create_dir (uint8_t* rd, uint16_t ParentDirInode, char* name);
 int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* name);
 int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* name);
 int delete_dir_entry(uint8_t* rd, struct rd_inode* ParentInode, uint16_t ParentInodeNO, int delete_blockNO);
-int find_same_name(uint8_t* rd, struct rd_inode* ParentInode);
+int find_same_name(uint8_t* rd, struct rd_inode* ParentInode,char* name);
 #endif

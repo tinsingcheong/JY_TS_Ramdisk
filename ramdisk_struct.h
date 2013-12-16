@@ -1,9 +1,9 @@
 #ifndef RAMDISK_STRUCT_H
 #define RAMDISK_STRUCT_H
 
-#define KL_DEBUG
+//#define KL_DEBUG
 
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 #include<linux/types.h>
 #endif
 

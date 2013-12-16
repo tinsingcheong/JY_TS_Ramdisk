@@ -1,15 +1,15 @@
 #ifndef RAMDISK_H
 #define RAMDISK_H
 
-#define KL_DEBUG
+//#define KL_DEBUG
 #include "ramdisk_struct.h"
 #include "constant.h"
 //#define UL_DEBUG //for user level debugging
 //#define KL_DEBUG
 
-
+#ifndef UL_DEBUG
 #include<linux/types.h>
-
+#endif
 
 #ifdef UL_DEBUG
 #include<stdio.h>

@@ -4,9 +4,9 @@
 
 //#define UL_DEBUG //for user level debugging
 
-#define KL_DEBUG
+//#define KL_DEBUG
 
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/errno.h> /* error codes */
@@ -229,7 +229,7 @@ uint8_t* ramdisk_init(){
 	}
 #endif
 
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 	if(!(ramdisk=(uint8_t*)vmalloc(RAMDISK_SIZE*sizeof(uint8_t)))){
 		printk("<1> No sufficient mem space for ramdisk!\n");
 		return NULL;
@@ -252,7 +252,7 @@ uint8_t* ramdisk_init(){
 		exit(-1);
 	}
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 	if(!(root_inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
 		printk("<1> No sufficient mem space for root dir!\n");
 		return NULL;
@@ -271,7 +271,7 @@ uint8_t* ramdisk_init(){
 		exit(-1);
 	}
 #endif 
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 	if(!(InitSuperBlock=(struct rd_super_block*)vmalloc(sizeof(struct rd_super_block)))){
 		printk("<1> No sufficient mem\n");
 		return NULL;
@@ -306,7 +306,7 @@ int search_file(uint8_t* rd, char* path){
 		exit(-1);
 	}
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 	if(!(path_list=(struct rd_path*)vmalloc(sizeof(struct rd_path)))){
 		printk("<1> No space for path list struct\n");
 		return (-1);
@@ -330,7 +330,7 @@ int search_file(uint8_t* rd, char* path){
 #ifdef UL_DEBUG
 				printf("Error, Wrong path\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 				printk("<1> Error, Wrong path\n");
 #endif
 
@@ -340,7 +340,7 @@ int search_file(uint8_t* rd, char* path){
 #ifdef UL_DEBUG
 				printf("Error, dir name %s too long\n",tmp);
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 				printk("<1> Error, dir name %s too long\n",tmp);
 #endif
 
@@ -355,7 +355,7 @@ int search_file(uint8_t* rd, char* path){
 					exit(-1);
 				}
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 				if(!(path_list=(struct rd_path*)vmalloc(sizeof(struct rd_path)))){
 					printk("<1> No space for path list struct\n");
 					return (-1);
@@ -382,7 +382,7 @@ int search_file(uint8_t* rd, char* path){
 #ifdef UL_DEBUG
 		printf("Error, Wrong path\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 		printk("<1> Error, Wrong path\n");
 #endif
 
@@ -396,7 +396,7 @@ int search_file(uint8_t* rd, char* path){
 #ifdef UL_DEBUG
 		printf("Error, dir name %s too long\n",tmp);
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 		printk("<1> Error, dir name %s too long\n",tmp);
 #endif
 
@@ -410,7 +410,7 @@ int search_file(uint8_t* rd, char* path){
 			exit(-1);
 		}
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 		if(!(path_list=(struct rd_path*)vmalloc(sizeof(struct rd_path)))){
 			printk("<1>No space for path list struct\n");
 			return (-1);
@@ -426,10 +426,10 @@ int search_file(uint8_t* rd, char* path){
 	}
 
 #ifdef UL_DEBUG
-	printf("Path list printing...\n");
-	for(path_list=path_root;path_list!=NULL;path_list=path_list->next){
+	//printf("Path list printing...\n");
+	//for(path_list=path_root;path_list!=NULL;path_list=path_list->next){
 	//	printf("%s\n",path_list->filename);
-	}
+	//}
 #endif
 
 // the path list is started with path_root and ended with path_leave
@@ -457,7 +457,7 @@ int search_file(uint8_t* rd, char* path){
 
 
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 	if(!(current_inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
 		printk("<1> No mem space!\n");
 		return (-1);
@@ -476,7 +476,7 @@ int search_file(uint8_t* rd, char* path){
 #ifdef UL_DEBUG
 			printf("The dir is actually a regular file, wrong path\n");
 #endif
-#ifdef KL_DEBUG
+#ifndef UL_DEBUG
 			printk("<1> The dir is actually a regular file, wrong path\n");
 #endif
 
@@ -517,7 +517,7 @@ int search_file(uint8_t* rd, char* path){
 			for(j=0;j<16;j++){//every block of dir file has 16 entries
 				read_dir_entry(&rd[current_direct_blockid*RD_BLOCK_SIZE+j*16],current_dir_entry);
 #ifdef UL_DEBUG
-	//			printf("i=%d, j=%d, %s, %d ,%s \n", i,j,current_dir_entry->filename,current_dir_entry->InodeNo,path_list->filename );
+		//		printf("i=%d, j=%d, %s, %d  \n", i,j,current_dir_entry->filename,current_dir_entry->InodeNo );
 #endif
 				if(strcmp(current_dir_entry->filename,path_list->filename)==0){
 					find_next_level_entry=1;

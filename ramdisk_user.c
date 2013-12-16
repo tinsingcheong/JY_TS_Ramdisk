@@ -1,10 +1,12 @@
 #include <stdio.h>
+#include<stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
 #include "ramdisk_user.h"
+extern struct file_object fd_table[1024];
 
 int ioctl_rd_fd; 
 int rd_create (char *pathname)
