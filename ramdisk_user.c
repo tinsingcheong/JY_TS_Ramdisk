@@ -194,7 +194,7 @@ int rd_readdir (int fd, char *address)
 	printf("starting reading dir for %s whose fd=%d, inode=%d pos=%d\n",fd_table[fd].pathname,fd,fd_table[fd].inodeNO,fd_table[fd].file_pos);
     rd_args.inodeNO = fd_table[fd].inodeNO;
     rd_args.buf     = address;
-	rd_args.file_pos=fd_table[fd].file_pos;
+	rd_args.pos=fd_table[fd].file_pos;
     ioctl(ioctl_rd_fd, RD_READDIR, &rd_args);
 	fd_table[fd].file_pos+=rd_args.ret;
 	printf("finish reading dir ,ret value is %d new file pos is %d\n",rd_args.ret,	fd_table[fd].file_pos);
