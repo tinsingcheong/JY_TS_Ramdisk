@@ -1,7 +1,22 @@
 #include "ramdisk_struct.h"
 #include "constant.h"
 #include "ramdisk.h"
-#define UL_DEBUG //for user level debugging
+
+//#define UL_DEBUG //for user level debugging
+
+#define KL_DEBUG
+
+#ifdef KL_DEBUG
+#include <linux/module.h>
+#include <linux/init.h>
+#include <linux/errno.h> /* error codes */
+#include <linux/proc_fs.h>
+#include <asm/uaccess.h>
+#include <linux/tty.h>
+#include <linux/sched.h>
+#include <linux/types.h>
+#include <linux/string.h>
+#endif
 
 #ifdef UL_DEBUG
 #include<stdint.h>
@@ -10,7 +25,7 @@
 #include<string.h>
 #endif
 
-void update_superblock(uint8_t* rd, struct super_block* SuperBlock){
+void update_superblock(uint8_t* rd, struct rd_super_block* SuperBlock){
 	int i;
 	rd[SUPERBLOCK_BASE]=(uint8_t)(SuperBlock->FreeBlockNum & 0x00ff);
 	rd[SUPERBLOCK_BASE+1]=(uint8_t)(SuperBlock->FreeBlockNum>>BYTELEN);
@@ -33,7 +48,7 @@ void partial_update_superblock(uint8_t* rd){
 
 }
 
-void read_superblock(uint8_t* rd, struct super_block* SuperBlock){
+void read_superblock(uint8_t* rd, struct rd_super_block* SuperBlock){
 	int i;
 	SuperBlock->FreeBlockNum=(((uint16_t)rd[SUPERBLOCK_BASE+1])<<BYTELEN) | (uint16_t)rd[SUPERBLOCK_BASE];
 	SuperBlock->FreeInodeNum=(((uint16_t)rd[SUPERBLOCK_BASE+3])<<BYTELEN) | (uint16_t)rd[SUPERBLOCK_BASE+2];
@@ -42,7 +57,7 @@ void read_superblock(uint8_t* rd, struct super_block* SuperBlock){
 	}
 }
 
-void update_inode(uint8_t* rd, uint16_t NodeNO, struct inode* Inode){
+void update_inode(uint8_t* rd, uint16_t NodeNO, struct rd_inode* Inode){
 	int i;
 	rd[INODE_BASE+NodeNO*64]=Inode->type;
 	rd[INODE_BASE+NodeNO*64+1]=(uint8_t)(Inode->size & 0x000000ff);
@@ -57,7 +72,7 @@ void update_inode(uint8_t* rd, uint16_t NodeNO, struct inode* Inode){
 	}
 }
 
-void read_inode(uint8_t* rd, uint16_t NodeNO, struct inode* Inode){
+void read_inode(uint8_t* rd, uint16_t NodeNO, struct rd_inode* Inode){
 	int i;
 	Inode->type=rd[INODE_BASE+NodeNO*64];
 	Inode->size=(uint32_t)(rd[INODE_BASE+NodeNO*64+1]) | ((uint32_t)(rd[INODE_BASE+NodeNO*64+2])<<BYTELEN) |
@@ -210,6 +225,14 @@ uint8_t* ramdisk_init(){
 		exit(-1);
 	}
 #endif
+
+#ifdef KL_DEBUG
+	if(!(ramdisk=(uint8_t*)vmalloc(RAMDISK_SIZE*sizeof(uint8_t)))){
+		printfk("<1> No sufficient mem space for ramdisk!\n");
+		return (-1);
+	}
+#endif
+
 	//Nullify all the data in ramdisk
 	memset(ramdisk,0,RAMDISK_SIZE);
 
@@ -220,26 +243,40 @@ uint8_t* ramdisk_init(){
 
 	//Init the root directory
 	int root_bid=find_next_free_block(ramdisk);//BlockNO for root dir
-	struct inode* root_inode;
+	struct rd_inode* root_inode;
 #ifdef UL_DEBUG
-	if(!(root_inode=(struct inode*)malloc(sizeof(struct inode)))){
+	if(!(root_inode=(struct rd_inode*)malloc(sizeof(struct rd_inode)))){
 		fprintf(stderr, "No sufficient mem space for root dir!\n");
 		exit(-1);
 	}
 #endif
+#ifdef KL_DEBUG
+	if(!(root_inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
+		printk("<1> No sufficient mem space for root dir!\n");
+		return (-1);
+	}
+#endif
+
 	root_inode->type=0;
 	root_inode->size=0;
 	root_inode->BlockPointer[0]=root_bid;
 	update_inode(ramdisk,0,root_inode);
 	
 	//Init the superblock
-	struct super_block* InitSuperBlock;
+	struct rd_super_block* InitSuperBlock;
 #ifdef UL_DEBUG
-	if(!(InitSuperBlock=(struct super_block*)malloc(sizeof(struct super_block)))){
+	if(!(InitSuperBlock=(struct rd_super_block*)malloc(sizeof(struct rd_super_block)))){
 		fprintf(stderr,"No sufficient mem\n");
 		exit(-1);
 	}
 #endif 
+#ifdef KL_DEBUG
+	if(!(InitSuperBlock=(struct rd_super_block*)vmalloc(sizeof(struct rd_super_block)))){
+		printk("<1> No sufficient mem\n");
+		return (-1);
+	}
+#endif 
+
 	InitSuperBlock->FreeBlockNum=BLOCK_NUM-(BITMAP_LIMIT+1)/BLOCK_SIZE;
 	InitSuperBlock->FreeInodeNum=INODE_NUM-1;//The root dir takes one inode
 	memset(InitSuperBlock->InodeBitmap,0,INODEBITMAP_SIZE);
@@ -255,19 +292,26 @@ uint8_t* ramdisk_init(){
 
 int search_file(uint8_t* rd, char* path){
 	int i,j,k;
-	struct path* path_list;
-	struct path* path_root;
-	struct path* path_leave;
+	struct rd_path* path_list;
+	struct rd_path* path_root;
+	struct rd_path* path_leave;
 	char tmp[14];
 	int inodeNO;
 //parse the path by token '/'
 
 #ifdef UL_DEBUG
-	if(!(path_list=(struct path*)malloc(sizeof(struct path)))){
+	if(!(path_list=(struct rd_path*)malloc(sizeof(struct rd_path)))){
 		fprintf(stderr, "No space for path list struct\n");
 		exit(-1);
 	}
 #endif
+#ifdef KL_DEBUG
+	if(!(path_list=(struct rd_path*)vmalloc(sizeof(struct rd_path)))){
+		printk("<1> No space for path list struct\n");
+		return (-1);
+	}
+#endif
+
 	path_list->next=NULL;
 
 	if(path[0]!='/'){//the first character of path should be root path
@@ -285,23 +329,38 @@ int search_file(uint8_t* rd, char* path){
 #ifdef UL_DEBUG
 				printf("Error, Wrong path\n");
 #endif
+#ifdef KL_DEBUG
+				printk("<1> Error, Wrong path\n");
+#endif
+
 				return -1;
 			}
 			else if(j>=14){
 #ifdef UL_DEBUG
 				printf("Error, dir name %s too long\n",tmp);
 #endif
+#ifdef KL_DEBUG
+				printk("<1> Error, dir name %s too long\n",tmp);
+#endif
+
 				return -1;
 			}
 			else{
 				tmp[j]='\0';
 				j=0;
 #ifdef UL_DEBUG
-				if(!(path_list=(struct path*)malloc(sizeof(struct path)))){
+				if(!(path_list=(struct rd_path*)malloc(sizeof(struct rd_path)))){
 					fprintf(stderr, "No space for path list struct\n");
 					exit(-1);
 				}
 #endif
+#ifdef KL_DEBUG
+				if(!(path_list=(struct rd_path*)vmalloc(sizeof(struct rd_path)))){
+					printk("<1> No space for path list struct\n");
+					return (-1);
+				}
+#endif
+
 				//add the path_list to the end of the link list
 				path_list->next=NULL;
 				path_leave->next=path_list;
@@ -322,6 +381,10 @@ int search_file(uint8_t* rd, char* path){
 #ifdef UL_DEBUG
 		printf("Error, Wrong path\n");
 #endif
+#ifdef KL_DEBUG
+		printk("<1> Error, Wrong path\n");
+#endif
+
 		return -1;
 	}
 	else if(j==0&&i==1){
@@ -332,16 +395,27 @@ int search_file(uint8_t* rd, char* path){
 #ifdef UL_DEBUG
 		printf("Error, dir name %s too long\n",tmp);
 #endif
+#ifdef KL_DEBUG
+		printk("<1> Error, dir name %s too long\n",tmp);
+#endif
+
 		return -1;
 	}
 	else{
 		tmp[j]='\0';
 #ifdef UL_DEBUG
-		if(!(path_list=(struct path*)malloc(sizeof(struct path)))){
+		if(!(path_list=(struct rd_path*)malloc(sizeof(struct rd_path)))){
 			fprintf(stderr, "No space for path list struct\n");
 			exit(-1);
 		}
 #endif
+#ifdef KL_DEBUG
+		if(!(path_list=(struct rd_path*)vmalloc(sizeof(struct rd_path)))){
+			printk("<1>No space for path list struct\n");
+			return (-1);
+		}
+#endif
+
 		//add the path_list to the end of the link list
 		path_list->next=NULL;
 		path_leave->next=path_list;
@@ -360,7 +434,7 @@ int search_file(uint8_t* rd, char* path){
 // the path list is started with path_root and ended with path_leave
 //
 	int current_inodeid=0;//start from the root inode
-	struct inode* current_inode;
+	struct rd_inode* current_inode;
 	uint32_t current_direct_blockid;
 	uint32_t current_single_indirect_blockid;
 	uint32_t current_double_indirect_blockid;
@@ -371,7 +445,7 @@ int search_file(uint8_t* rd, char* path){
 	int single_indirect_pointer_block_number;
 	int direct_pointer_block_number;
 #ifdef UL_DEBUG
-	if(!(current_inode=(struct inode*)malloc(sizeof(struct inode)))){
+	if(!(current_inode=(struct rd_inode*)malloc(sizeof(struct rd_inode)))){
 		fprintf(stderr,"No mem space!\n");
 		exit(-1);
 	}
@@ -382,6 +456,17 @@ int search_file(uint8_t* rd, char* path){
 
 
 #endif
+#ifdef KL_DEBUG
+	if(!(current_inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
+		printk("<1> No mem space!\n");
+		return (-1);
+	}
+	if(!(current_dir_entry=(struct dir_entry*)vmalloc(sizeof(struct dir_entry)))){
+		printk("<1> No mem space!\n");
+		return (-1);
+	}
+#endif
+
 
 	for(path_list=path_root->next;path_list!=NULL;path_list=path_list->next){
 		find_next_level_entry=0;
@@ -390,6 +475,10 @@ int search_file(uint8_t* rd, char* path){
 #ifdef UL_DEBUG
 			printf("The dir is actually a regular file, wrong path\n");
 #endif
+#ifdef KL_DEBUG
+			printk("<1> The dir is actually a regular file, wrong path\n");
+#endif
+
 			return -1;
 		}
 

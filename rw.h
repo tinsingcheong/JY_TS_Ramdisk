@@ -1,8 +1,15 @@
 #ifndef RW_H
 #define RW_H
+
+#define KL_DEBUG
+#ifdef KL_DEBUG
+#include<linux/types.h>
+#endif
+
 #ifdef UL_DEBUG
 #include<stdint.h>
 #endif
+
 #include"file_func.h"
 #include"ramdisk_struct.h"
 #include"constant.h"

@@ -3,7 +3,21 @@
 #include "constant.h"
 #include "ramdisk.h"
 
-#define UL_DEBUG
+#define KL_DEBUG
+
+#ifdef KL_DEBUG
+#include <linux/module.h>
+#include <linux/init.h>
+#include <linux/errno.h> /* error codes */
+#include <linux/proc_fs.h>
+#include <asm/uaccess.h>
+#include <linux/tty.h>
+#include <linux/sched.h>
+#include <linux/types.h>
+#include <linux/string.h>
+
+#endif
+
 
 #ifdef UL_DEBUG
 #include<stdint.h>
@@ -16,16 +30,22 @@ uint8_t* file_byte_locate(uint8_t* rd, uint16_t inodeNO, int pos){
 	//return the pointer of the posth of byte in the file specified by the inodeNO
 	//return NULL if not found or invalid position value
 	int i;
-	struct inode* file_inode;
+	struct rd_inode* file_inode;
 	uint8_t* return_val;
 	int size_region_type;
 	int cur_direct_pointer;
 	int cur_single_indirect_pointer;
 	int cur_double_indirect_pointer;
 #ifdef UL_DEBUG
-	if(!(file_inode=(struct inode*)malloc(sizeof(struct inode)))){
+	if(!(file_inode=(struct rd_inode*)malloc(sizeof(struct rd_inode)))){
 		fprintf(stderr, "No memory space\n");
 		exit(-1);
+	}
+#endif
+#ifdef KL_DEBUG
+	if(!(file_inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
+		printk("<1> No memory space\n");
+		return (-1);
 	}
 #endif
 	read_inode(rd, inodeNO, file_inode);
@@ -104,18 +124,25 @@ uint8_t* file_byte_locate(uint8_t* rd, uint16_t inodeNO, int pos){
 uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 	//return a pointer value for the new byte appended to the end of one file
 	int i;
-	struct inode* file_inode;
+	struct rd_inode* file_inode;
 	uint8_t* return_val;
 	int size_region_type;
 	uint32_t cur_direct_pointer;
 	uint32_t cur_single_indirect_pointer;
 	uint32_t cur_double_indirect_pointer;
 #ifdef UL_DEBUG
-	if(!(file_inode=(struct inode*)malloc(sizeof(struct inode)))){
+	if(!(file_inode=(struct rd_inode*)malloc(sizeof(struct rd_inode)))){
 		fprintf(stderr, "No memory space\n");
 		exit(-1);
 	}
 #endif
+#ifdef KL_DEBUG
+	if(!(file_inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
+		printk("<1> No memory space\n");
+		return (-1);
+	}
+#endif
+
 	read_inode(rd, inodeNO, file_inode);
 	int block_num=file_inode->size/BLOCK_SIZE;
 	int block_offset=file_inode->size%BLOCK_SIZE;
@@ -158,7 +185,6 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 	//	printf("updating\n");
 		update_inode(rd,inodeNO,file_inode);
 	//	printf("returning\n");
-		fflush(stdout);
 		return return_val;
 
 	}
@@ -169,6 +195,9 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 			if(file_inode->BlockPointer[block_num]==-1){
 #ifdef UL_DEBUG
 				printf("No free block for first %dth direct blocks\n",block_num);
+#endif
+#ifdef KL_DEBUG
+				printk("<1> No free block for first %dth direct blocks\n",block_num);
 #endif
 				return NULL;
 			}
@@ -184,6 +213,10 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #ifdef UL_DEBUG
 				printf("No free block for the single indirect block\n");
 #endif
+#ifdef KL_DEBUG
+				printk("<1> No free block for the single indirect block\n");
+#endif
+
 				return NULL;
 			}
 			set_bitmap(rd,cur_single_indirect_pointer);
@@ -193,6 +226,10 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #ifdef UL_DEBUG
 				printf("No free block for the 0th direct block in single indirect block\n");
 #endif
+#ifdef KL_DEBUG
+				printk("<1> No free block for the 0th direct block in single indirect block\n");
+#endif
+
 				return NULL;
 			}
 			set_bitmap(rd,cur_direct_pointer);
@@ -210,6 +247,10 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #ifdef UL_DEBUG
 				printf("No free block for the %dth direct block in single indirect block\n",block_num-8);
 #endif
+#ifdef KL_DEBUG
+				printk("<1> No free block for the %dth direct block in single indirect block\n",block_num-8);
+#endif
+
 				return NULL;
 			}
 			set_bitmap(rd,cur_direct_pointer);
@@ -225,6 +266,10 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #ifdef UL_DEBUG
 				printf("No free block for the double indirect block\n");
 #endif
+#ifdef KL_DEBUG
+				printk("<1> No free block for the double indirect block\n");
+#endif
+
 				return NULL;
 			}
 			file_inode->BlockPointer[9]=cur_double_indirect_pointer;
@@ -234,6 +279,10 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #ifdef UL_DEBUG
 				printf("No free block for the 1st single indirect block in the double indirect block\n");
 #endif
+#ifdef KL_DEBUG
+				printk("<1> No free block for the 1st single indirect block in the double indirect block\n");
+#endif
+
 				return NULL;
 			}
 			set_bitmap(rd,cur_single_indirect_pointer);
@@ -243,6 +292,10 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #ifdef UL_DEBUG
 				printf("No free block for the 1st direct block in the 1st single indirect block in the double indirect block\n");
 #endif
+#ifdef KL_DEBUG
+				printK("<1> No free block for the 1st direct block in the 1st single indirect block in the double indirect block\n");
+#endif
+
 				return NULL;
 			}
 			set_bitmap(rd,cur_direct_pointer);
@@ -260,6 +313,10 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #ifdef UL_DEBUG
 					printf("No free block for the %dth single indirect block in the double indirect block\n",(block_num-72)/64);
 #endif
+#ifdef KL_DEBUG
+					printk("<1> No free block for the %dth single indirect block in the double indirect block\n",(block_num-72)/64);
+#endif
+
 					return NULL;
 				}
 				set_bitmap(rd,cur_single_indirect_pointer);
@@ -271,6 +328,11 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 					printf("No free block for the 0th direct block in the %dth single indirect block in the double indirect block\n",
 								(block_num-72)/64);
 #endif
+#ifdef KL_DEBUG
+					printk("<1> No free block for the 0th direct block in the %dth single indirect block in the double indirect block\n",
+								(block_num-72)/64);
+#endif
+
 					return NULL;
 				}
 				set_bitmap(rd,cur_direct_pointer);
@@ -288,6 +350,11 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 					printf("No free block for the %dth direct block in the %dth single indirect block in the double indirect block\n",
 								(block_num-72)%64,(block_num-72)/64);
 #endif
+#ifdef KL_DEBUG
+					printk("<1> No free block for the %dth direct block in the %dth single indirect block in the double indirect block\n",
+								(block_num-72)%64,(block_num-72)/64);
+#endif
+
 					return NULL;
 				}
 				set_bitmap(rd,cur_direct_pointer);
@@ -303,6 +370,10 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #ifdef UL_DEBUG
 			printf("The largest possible of one file is reached\n");
 #endif
+#ifdef KL_DEBUG
+			printk("<1> The largest possible of one file is reached\n");
+#endif
+
 
 			return NULL;
 
@@ -322,26 +393,42 @@ int read_ramdisk(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf, int lengt
 	
 	int i=0;
 	int count=0;
-	struct inode* file_inode;
+	struct rd_inode* file_inode;
 	uint8_t* ptr;
 #ifdef UL_DEBUG
-	if(!(file_inode=(struct inode*)malloc(sizeof(struct inode)))){
+	if(!(file_inode=(struct rd_inode*)malloc(sizeof(struct rd_inode)))){
 		fprintf(stderr, "No memory space\n");
 		exit(-1);
 	}
 #endif
+#ifdef KL_DEBUG
+	if(!(file_inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
+		printk("<1> No memory space\n");
+		return (-1);
+	}
+#endif
+
 	read_inode(rd,inodeNO,file_inode);
 	if(file_inode->type==0){
 #ifdef UL_DEBUG
 		printf("The file is dir file, which is unreadable\n");
 #endif
+#ifdef KL_DEBUG
+		printk("<1> The file is dir file, which is unreadable\n");
+#endif
+
 		return -1;
 	}
 	for(i=0;i<length;i++){
 		ptr=file_byte_locate(rd, inodeNO, pos+i);
 		if(ptr==NULL)
 			break;
+#ifdef UL_DEBUG
 		*(buf+i)=*ptr;
+#endif
+#ifdef KL_DEBUG
+		copy_to_user(buf+i,ptr,sizeof(uint8_t));
+#endif
 		count++;
 	}
 
@@ -354,20 +441,32 @@ int write_ramdisk(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf, int leng
 	
 	int i=0;
 	int count=0;
-	struct inode* file_inode;
+	struct rd_inode* file_inode;
 	uint8_t* ptr;
 #ifdef UL_DEBUG
 
-	if(!(file_inode=(struct inode*)malloc(sizeof(struct inode)))){
+	if(!(file_inode=(struct rd_inode*)malloc(sizeof(struct rd_inode)))){
 		fprintf(stderr, "No memory space\n");
 		exit(-1);
 	}
 #endif
+#ifdef KL_DEBUG
+
+	if(!(file_inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
+		printk("<1> No memory space\n");
+		return -1;
+	}
+#endif
+
 	read_inode(rd,inodeNO,file_inode);
 	if(file_inode->type==0){
 #ifdef UL_DEBUG
 		printf("The file is dir file, which is unwritable\n");
 #endif
+#ifdef KL_DEBUG
+		printk("<1> The file is dir file, which is unwritable\n");
+#endif
+
 		return -1;
 	}
 
@@ -375,6 +474,10 @@ int write_ramdisk(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf, int leng
 #ifdef UL_DEBUG
 		printf("The start pos is out of file size range\n");
 #endif
+#ifdef KL_DEBUG
+		printk("<1> The start pos is out of file size range\n");
+#endif
+
 		return -1;
 	}
 
@@ -390,12 +493,17 @@ int write_ramdisk(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf, int leng
 			break;
 	//	printf("Copying from %x:%c to ptr %x\n", buf+i, *(buf+i), ptr);
 	//	fflush(stdout);
+#ifdef UL_DEBUG
 		*ptr=*(buf+i);
+#endif
+#ifdef KL_DEBUG
+		copy_from_user(ptr,buf+i,sizeof(uint8_t));
+#endif
 	//	printf("Copy finished\n");
 	//	fflush(stdout);
 		count++;
 	//	printf("count=%d\n",count);
-		fflush(stdout);
+	//	fflush(stdout);
 		read_inode(rd,inodeNO,file_inode);
 
 	}
@@ -410,19 +518,30 @@ int write_ramdisk(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf, int leng
 int readdir(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf){
 	int i=0;
 	int count=0;
-	struct inode* file_inode;
+	struct rd_inode* file_inode;
 	uint8_t* ptr;
 #ifdef UL_DEBUG
-	if(!(file_inode=(struct inode*)malloc(sizeof(struct inode)))){
+	if(!(file_inode=(struct rd_inode*)malloc(sizeof(struct rd_inode)))){
 		fprintf(stderr, "No memory space\n");
 		exit(-1);
 	}
 #endif
+#ifdef KL_DEBUG
+	if(!(file_inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
+		printk("<1> No memory space\n");
+		return (-1);
+	}
+#endif
+
 	read_inode(rd,inodeNO,file_inode);
 	if(file_inode->type==1){
 #ifdef UL_DEBUG
 		printf("The file is regular file, which is unreadable for readdir\n");
 #endif
+#ifdef KL_DEBUG
+		printk("<1> The file is regular file, which is unreadable for readdir\n");
+#endif
+
 		return -1;
 	}
 
@@ -430,7 +549,12 @@ int readdir(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf){
 		ptr=file_byte_locate(rd, inodeNO, pos*16+i);
 		if(ptr==NULL)
 			break;
+#ifdef UL_DEBUG
 		*(buf+i)=*ptr;
+#endif
+#ifdef KL_DEBUG
+		copy_to_user(buf+i, ptr, sizeof(uint8_t));
+#endif
 		count++;
 	}
 
