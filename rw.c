@@ -57,6 +57,10 @@ uint8_t* file_byte_locate(uint8_t* rd, uint16_t inodeNO, int pos){
 	}*/
 	if(pos>=file_inode->size){
 	//The file position pointer exceeds the file size limit
+#ifndef UL_DEBUG
+		vfree(file_inode);
+#endif
+
 		return NULL;
 	}
 
@@ -141,7 +145,7 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #ifndef UL_DEBUG
 	if(!(file_inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
 		printk("<1> No memory space\n");
-		return (-1);
+		return NULL;
 	}
 #endif
 
@@ -187,6 +191,9 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 	//	printf("updating\n");
 		update_inode(rd,inodeNO,file_inode);
 	//	printf("returning\n");
+#ifndef UL_DEBUG
+		vfree(file_inode)
+#endif
 		return return_val;
 
 	}
