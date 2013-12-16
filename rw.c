@@ -45,7 +45,7 @@ uint8_t* file_byte_locate(uint8_t* rd, uint16_t inodeNO, int pos){
 #ifdef KL_DEBUG
 	if(!(file_inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
 		printk("<1> No memory space\n");
-		return (-1);
+		return NULL;
 	}
 #endif
 	read_inode(rd, inodeNO, file_inode);
@@ -66,50 +66,50 @@ uint8_t* file_byte_locate(uint8_t* rd, uint16_t inodeNO, int pos){
 	 * [73, 4168]      size_region_type=2
 	 */
 	//determing the file size belongs to which region
-	if(file_inode->size<=8*BLOCK_SIZE){
+	if(file_inode->size<=8*RD_BLOCK_SIZE){
 		size_region_type=0;
 	}
-	else if(file_inode->size>8*BLOCK_SIZE && file_inode->size<=72*BLOCK_SIZE){
+	else if(file_inode->size>8*RD_BLOCK_SIZE && file_inode->size<=72*RD_BLOCK_SIZE){
 		size_region_type=1;
 	}
-	else if(file_inode->size>72*BLOCK_SIZE && file_inode->size<=4168*BLOCK_SIZE){
+	else if(file_inode->size>72*RD_BLOCK_SIZE && file_inode->size<=4168*RD_BLOCK_SIZE){
 		size_region_type=2;
 	}
 	
-	int block_num=pos/BLOCK_SIZE;
-	int block_offset=pos%BLOCK_SIZE;
+	int block_num=pos/RD_BLOCK_SIZE;
+	int block_offset=pos%RD_BLOCK_SIZE;
 	int indirect_block_num=(block_num-72)/64;
 	int indirect_block_offset=(block_num-72)%64;
 	if(size_region_type==0){
 		cur_direct_pointer=file_inode->BlockPointer[block_num];
-		return_val=rd+cur_direct_pointer*BLOCK_SIZE+block_offset;
+		return_val=rd+cur_direct_pointer*RD_BLOCK_SIZE+block_offset;
 	}
 	else if(size_region_type==1){
-		if(pos<8*BLOCK_SIZE){
+		if(pos<8*RD_BLOCK_SIZE){
 			cur_direct_pointer=file_inode->BlockPointer[block_num];
-			return_val=rd+cur_direct_pointer*BLOCK_SIZE+block_offset;
+			return_val=rd+cur_direct_pointer*RD_BLOCK_SIZE+block_offset;
 		}
 		else{
 			cur_single_indirect_pointer=file_inode->BlockPointer[8];
-			cur_direct_pointer=(*((uint32_t*)(rd+cur_single_indirect_pointer*BLOCK_SIZE+(block_num-8)*4)));
-			return_val=rd+cur_direct_pointer*BLOCK_SIZE+block_offset;
+			cur_direct_pointer=(*((uint32_t*)(rd+cur_single_indirect_pointer*RD_BLOCK_SIZE+(block_num-8)*4)));
+			return_val=rd+cur_direct_pointer*RD_BLOCK_SIZE+block_offset;
 		}
 	}
 	else if(size_region_type==2){
-		if(pos<8*BLOCK_SIZE){
+		if(pos<8*RD_BLOCK_SIZE){
 			cur_direct_pointer=file_inode->BlockPointer[block_num];
-			return_val=rd+cur_direct_pointer*BLOCK_SIZE+block_offset;
+			return_val=rd+cur_direct_pointer*RD_BLOCK_SIZE+block_offset;
 		}
-		else if(pos<72*BLOCK_SIZE){
+		else if(pos<72*RD_BLOCK_SIZE){
 			cur_single_indirect_pointer=file_inode->BlockPointer[8];
-			cur_direct_pointer=(*((uint32_t*)(rd+cur_single_indirect_pointer*BLOCK_SIZE+(block_num-8)*4)));
-			return_val=rd+cur_direct_pointer*BLOCK_SIZE+block_offset;
+			cur_direct_pointer=(*((uint32_t*)(rd+cur_single_indirect_pointer*RD_BLOCK_SIZE+(block_num-8)*4)));
+			return_val=rd+cur_direct_pointer*RD_BLOCK_SIZE+block_offset;
 		}
 		else{
 			cur_double_indirect_pointer=file_inode->BlockPointer[9];
-			cur_single_indirect_pointer=(*((uint32_t*)(rd+cur_double_indirect_pointer*BLOCK_SIZE+indirect_block_num*4)));
-			cur_direct_pointer=(*((uint32_t*)(rd+cur_single_indirect_pointer*BLOCK_SIZE+indirect_block_offset*4)));
-			return_val=rd+cur_direct_pointer*BLOCK_SIZE+block_offset;
+			cur_single_indirect_pointer=(*((uint32_t*)(rd+cur_double_indirect_pointer*RD_BLOCK_SIZE+indirect_block_num*4)));
+			cur_direct_pointer=(*((uint32_t*)(rd+cur_single_indirect_pointer*RD_BLOCK_SIZE+indirect_block_offset*4)));
+			return_val=rd+cur_direct_pointer*RD_BLOCK_SIZE+block_offset;
 
 		}
 
@@ -144,8 +144,8 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 #endif
 
 	read_inode(rd, inodeNO, file_inode);
-	int block_num=file_inode->size/BLOCK_SIZE;
-	int block_offset=file_inode->size%BLOCK_SIZE;
+	int block_num=file_inode->size/RD_BLOCK_SIZE;
+	int block_offset=file_inode->size%RD_BLOCK_SIZE;
 //	printf("block_num=%d,block_offset=%d\n",block_num,block_offset);
 //	fflush(stdout);
 	/* the size of block num have three regions (unit:block)
@@ -202,7 +202,7 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 				return NULL;
 			}
 			set_bitmap(rd,file_inode->BlockPointer[block_num]);
-			return_val=rd+file_inode->BlockPointer[block_num]*BLOCK_SIZE;
+			return_val=rd+file_inode->BlockPointer[block_num]*RD_BLOCK_SIZE;
 			file_inode->size++;
 			update_inode(rd,inodeNO,file_inode);
 			return return_val;
@@ -234,8 +234,8 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 			}
 			set_bitmap(rd,cur_direct_pointer);
 
-			*((uint32_t*)(rd+cur_single_indirect_pointer*BLOCK_SIZE))=cur_direct_pointer;
-			return_val=rd+cur_direct_pointer*BLOCK_SIZE;
+			*((uint32_t*)(rd+cur_single_indirect_pointer*RD_BLOCK_SIZE))=cur_direct_pointer;
+			return_val=rd+cur_direct_pointer*RD_BLOCK_SIZE;
 			file_inode->size++;
 			update_inode(rd,inodeNO,file_inode);
 			return return_val;
@@ -254,8 +254,8 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 				return NULL;
 			}
 			set_bitmap(rd,cur_direct_pointer);
-			*((uint32_t*)(rd+cur_single_indirect_pointer*BLOCK_SIZE+4*(block_num-8)))=cur_direct_pointer;
-			return_val=rd+cur_direct_pointer*BLOCK_SIZE;
+			*((uint32_t*)(rd+cur_single_indirect_pointer*RD_BLOCK_SIZE+4*(block_num-8)))=cur_direct_pointer;
+			return_val=rd+cur_direct_pointer*RD_BLOCK_SIZE;
 			file_inode->size++;
 			update_inode(rd,inodeNO,file_inode);
 			return return_val;
@@ -286,21 +286,21 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 				return NULL;
 			}
 			set_bitmap(rd,cur_single_indirect_pointer);
-			*((uint32_t*)(rd+cur_double_indirect_pointer*BLOCK_SIZE))=cur_single_indirect_pointer;
+			*((uint32_t*)(rd+cur_double_indirect_pointer*RD_BLOCK_SIZE))=cur_single_indirect_pointer;
 			cur_direct_pointer=find_next_free_block(rd);
 			if(cur_direct_pointer==-1){
 #ifdef UL_DEBUG
 				printf("No free block for the 1st direct block in the 1st single indirect block in the double indirect block\n");
 #endif
 #ifdef KL_DEBUG
-				printK("<1> No free block for the 1st direct block in the 1st single indirect block in the double indirect block\n");
+				printk("<1> No free block for the 1st direct block in the 1st single indirect block in the double indirect block\n");
 #endif
 
 				return NULL;
 			}
 			set_bitmap(rd,cur_direct_pointer);
-			*((uint32_t*)(rd+cur_single_indirect_pointer*BLOCK_SIZE))=cur_direct_pointer;
-			return_val=rd+cur_direct_pointer*BLOCK_SIZE;
+			*((uint32_t*)(rd+cur_single_indirect_pointer*RD_BLOCK_SIZE))=cur_direct_pointer;
+			return_val=rd+cur_direct_pointer*RD_BLOCK_SIZE;
 			file_inode->size++;
 			update_inode(rd,inodeNO,file_inode);
 			return return_val;
@@ -320,7 +320,7 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 					return NULL;
 				}
 				set_bitmap(rd,cur_single_indirect_pointer);
-				*((uint32_t*)(rd+cur_double_indirect_pointer*BLOCK_SIZE+4*((block_num-72)/64)))=cur_single_indirect_pointer;
+				*((uint32_t*)(rd+cur_double_indirect_pointer*RD_BLOCK_SIZE+4*((block_num-72)/64)))=cur_single_indirect_pointer;
 
 				cur_direct_pointer=find_next_free_block(rd);
 				if(cur_direct_pointer==-1){
@@ -336,14 +336,14 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 					return NULL;
 				}
 				set_bitmap(rd,cur_direct_pointer);
-				*((uint32_t*)(rd+cur_single_indirect_pointer*BLOCK_SIZE))=cur_direct_pointer;
-				return_val=rd+cur_direct_pointer*BLOCK_SIZE;
+				*((uint32_t*)(rd+cur_single_indirect_pointer*RD_BLOCK_SIZE))=cur_direct_pointer;
+				return_val=rd+cur_direct_pointer*RD_BLOCK_SIZE;
 				file_inode->size++;
 				update_inode(rd,inodeNO,file_inode);
 				return return_val;
 			}
 			else{
-				cur_single_indirect_pointer=(*((uint32_t*)(rd+cur_double_indirect_pointer*BLOCK_SIZE+4*((block_num-72)/64))));
+				cur_single_indirect_pointer=(*((uint32_t*)(rd+cur_double_indirect_pointer*RD_BLOCK_SIZE+4*((block_num-72)/64))));
 				cur_direct_pointer=find_next_free_block(rd);
 				if(cur_direct_pointer==-1){
 #ifdef UL_DEBUG
@@ -358,8 +358,8 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 					return NULL;
 				}
 				set_bitmap(rd,cur_direct_pointer);
-				*((uint32_t*)(rd+cur_single_indirect_pointer*BLOCK_SIZE+4*((block_num-72)%64)))=cur_direct_pointer;
-				return_val=rd+cur_direct_pointer*BLOCK_SIZE;
+				*((uint32_t*)(rd+cur_single_indirect_pointer*RD_BLOCK_SIZE+4*((block_num-72)%64)))=cur_direct_pointer;
+				return_val=rd+cur_direct_pointer*RD_BLOCK_SIZE;
 				file_inode->size++;
 				update_inode(rd,inodeNO,file_inode);
 				return return_val;

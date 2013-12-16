@@ -4,7 +4,7 @@
 
 #include "ramdisk_struct.h"
 
-//#define KL_DEBUG
+#define KL_DEBUG
 #ifdef KL_DEBUG
 #include <linux/types.h>
 #endif

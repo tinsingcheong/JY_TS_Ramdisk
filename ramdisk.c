@@ -219,6 +219,9 @@ void clear_dir_entry(uint8_t* ptr){
 uint8_t* ramdisk_init(){
 	int i;
 	uint8_t* ramdisk;
+	int root_bid;
+	struct rd_inode* root_inode;
+	struct rd_super_block* InitSuperBlock;
 #ifdef UL_DEBUG
 	if(!(ramdisk=(uint8_t*)malloc(RAMDISK_SIZE*sizeof(uint8_t)))){
 		fprintf(stderr,"No sufficient mem space for ramdisk!\n");
@@ -228,8 +231,8 @@ uint8_t* ramdisk_init(){
 
 #ifdef KL_DEBUG
 	if(!(ramdisk=(uint8_t*)vmalloc(RAMDISK_SIZE*sizeof(uint8_t)))){
-		printfk("<1> No sufficient mem space for ramdisk!\n");
-		return (-1);
+		printk("<1> No sufficient mem space for ramdisk!\n");
+		return NULL;
 	}
 #endif
 
@@ -237,13 +240,12 @@ uint8_t* ramdisk_init(){
 	memset(ramdisk,0,RAMDISK_SIZE);
 
 	//Init the bitmap
-	for(i=0;i<=(BITMAP_LIMIT+1)/BLOCK_SIZE;i++){
+	for(i=0;i<=(BITMAP_LIMIT+1)/RD_BLOCK_SIZE;i++){
 		set_bitmap(ramdisk,i);
 	}
 
 	//Init the root directory
-	int root_bid=find_next_free_block(ramdisk);//BlockNO for root dir
-	struct rd_inode* root_inode;
+	root_bid=find_next_free_block(ramdisk);//BlockNO for root dir
 #ifdef UL_DEBUG
 	if(!(root_inode=(struct rd_inode*)malloc(sizeof(struct rd_inode)))){
 		fprintf(stderr, "No sufficient mem space for root dir!\n");
@@ -253,7 +255,7 @@ uint8_t* ramdisk_init(){
 #ifdef KL_DEBUG
 	if(!(root_inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
 		printk("<1> No sufficient mem space for root dir!\n");
-		return (-1);
+		return NULL;
 	}
 #endif
 
@@ -263,7 +265,6 @@ uint8_t* ramdisk_init(){
 	update_inode(ramdisk,0,root_inode);
 	
 	//Init the superblock
-	struct rd_super_block* InitSuperBlock;
 #ifdef UL_DEBUG
 	if(!(InitSuperBlock=(struct rd_super_block*)malloc(sizeof(struct rd_super_block)))){
 		fprintf(stderr,"No sufficient mem\n");
@@ -273,11 +274,11 @@ uint8_t* ramdisk_init(){
 #ifdef KL_DEBUG
 	if(!(InitSuperBlock=(struct rd_super_block*)vmalloc(sizeof(struct rd_super_block)))){
 		printk("<1> No sufficient mem\n");
-		return (-1);
+		return NULL;
 	}
 #endif 
 
-	InitSuperBlock->FreeBlockNum=BLOCK_NUM-(BITMAP_LIMIT+1)/BLOCK_SIZE;
+	InitSuperBlock->FreeBlockNum=BLOCK_NUM-(BITMAP_LIMIT+1)/RD_BLOCK_SIZE;
 	InitSuperBlock->FreeInodeNum=INODE_NUM-1;//The root dir takes one inode
 	memset(InitSuperBlock->InodeBitmap,0,INODEBITMAP_SIZE);
 	update_superblock(ramdisk,InitSuperBlock);
@@ -488,19 +489,19 @@ int search_file(uint8_t* rd, char* path){
 		 * [73, 1067008]   size_region_type=2
 		 */
 		//determing the file size belongs to which region
-		if(current_inode->size<=8*BLOCK_SIZE){
+		if(current_inode->size<=8*RD_BLOCK_SIZE){
 			size_region_type=0;
 		}
-		else if(current_inode->size>8*BLOCK_SIZE && current_inode->size<=72*BLOCK_SIZE){
+		else if(current_inode->size>8*RD_BLOCK_SIZE && current_inode->size<=72*RD_BLOCK_SIZE){
 			size_region_type=1;
 		}
-		else if(current_inode->size>72*BLOCK_SIZE && current_inode->size<=4168*BLOCK_SIZE){
+		else if(current_inode->size>72*RD_BLOCK_SIZE && current_inode->size<=4168*RD_BLOCK_SIZE){
 			size_region_type=2;
 		}
 		
 		//first traverse the 8 direct block pointers
 
-		for(i=0;i<((size_region_type==0)?(current_inode->size/BLOCK_SIZE+1):8);i++){
+		for(i=0;i<((size_region_type==0)?(current_inode->size/RD_BLOCK_SIZE+1):8);i++){
 			current_direct_blockid=current_inode->BlockPointer[i];
 			if(current_direct_blockid<261){
 				/*the first 261 blocks is taken by superblock, inodes and bitmap
@@ -514,7 +515,7 @@ int search_file(uint8_t* rd, char* path){
 #endif
 
 			for(j=0;j<16;j++){//every block of dir file has 16 entries
-				read_dir_entry(&rd[current_direct_blockid*BLOCK_SIZE+j*16],current_dir_entry);
+				read_dir_entry(&rd[current_direct_blockid*RD_BLOCK_SIZE+j*16],current_dir_entry);
 #ifdef UL_DEBUG
 	//			printf("i=%d, j=%d, %s, %d ,%s \n", i,j,current_dir_entry->filename,current_dir_entry->InodeNo,path_list->filename );
 #endif
@@ -544,17 +545,17 @@ int search_file(uint8_t* rd, char* path){
 	//		fflush(stdout);
 #endif
 
-		for(i=0;i<((size_region_type==1)?((current_inode->size-8*BLOCK_SIZE)/BLOCK_SIZE+1):64);i++){
-			current_direct_blockid=(uint32_t)(rd[current_single_indirect_blockid*BLOCK_SIZE+4*i]) |
-							((uint32_t)(rd[current_single_indirect_blockid*BLOCK_SIZE+4*i+1])<<BYTELEN) | 
-							((uint32_t)(rd[current_single_indirect_blockid*BLOCK_SIZE+4*i+2])<<(2*BYTELEN)) | 
-							((uint32_t)(rd[current_single_indirect_blockid*BLOCK_SIZE+4*i+3])<<(3*BYTELEN));
+		for(i=0;i<((size_region_type==1)?((current_inode->size-8*RD_BLOCK_SIZE)/RD_BLOCK_SIZE+1):64);i++){
+			current_direct_blockid=(uint32_t)(rd[current_single_indirect_blockid*RD_BLOCK_SIZE+4*i]) |
+							((uint32_t)(rd[current_single_indirect_blockid*RD_BLOCK_SIZE+4*i+1])<<BYTELEN) | 
+							((uint32_t)(rd[current_single_indirect_blockid*RD_BLOCK_SIZE+4*i+2])<<(2*BYTELEN)) | 
+							((uint32_t)(rd[current_single_indirect_blockid*RD_BLOCK_SIZE+4*i+3])<<(3*BYTELEN));
 #ifdef UL_DEBUG
 		//	printf("the direct block id is %d\n",current_direct_blockid);
 		//	fflush(stdout);
 #endif
 			for(j=0;j<16;j++){
-				read_dir_entry(&rd[(current_direct_blockid)*BLOCK_SIZE+j*16],current_dir_entry);
+				read_dir_entry(&rd[(current_direct_blockid)*RD_BLOCK_SIZE+j*16],current_dir_entry);
 #ifdef UL_DEBUG
 		//		printf("i=%d, j=%d, %s, %d ,%s \n", i,j,current_dir_entry->filename,current_dir_entry->InodeNo,path_list->filename );
 #endif
@@ -583,22 +584,22 @@ int search_file(uint8_t* rd, char* path){
 		 * Each of these single-indirect block pointers points to a block with 64 direct block pointers
 		 */
 		current_double_indirect_blockid=current_inode->BlockPointer[9];
-		single_indirect_pointer_block_number=(current_inode->size-72*BLOCK_SIZE)/(64*BLOCK_SIZE)+1;
+		single_indirect_pointer_block_number=(current_inode->size-72*RD_BLOCK_SIZE)/(64*RD_BLOCK_SIZE)+1;
 
 		for(i=0;i<single_indirect_pointer_block_number;i++){
-			current_single_indirect_blockid=(uint32_t)(rd[current_double_indirect_blockid*BLOCK_SIZE+4*i]) |
-							((uint32_t)(rd[current_double_indirect_blockid*BLOCK_SIZE+4*i+1])<<BYTELEN) | 
-							((uint32_t)(rd[current_double_indirect_blockid*BLOCK_SIZE+4*i+2])<<(2*BYTELEN)) | 
-							((uint32_t)(rd[current_double_indirect_blockid*BLOCK_SIZE+4*i+3])<<(3*BYTELEN));
-			direct_pointer_block_number=((i==single_indirect_pointer_block_number-1)?(((current_inode->size-72*BLOCK_SIZE)%(64*BLOCK_SIZE))/BLOCK_SIZE+1):64);
+			current_single_indirect_blockid=(uint32_t)(rd[current_double_indirect_blockid*RD_BLOCK_SIZE+4*i]) |
+							((uint32_t)(rd[current_double_indirect_blockid*RD_BLOCK_SIZE+4*i+1])<<BYTELEN) | 
+							((uint32_t)(rd[current_double_indirect_blockid*RD_BLOCK_SIZE+4*i+2])<<(2*BYTELEN)) | 
+							((uint32_t)(rd[current_double_indirect_blockid*RD_BLOCK_SIZE+4*i+3])<<(3*BYTELEN));
+			direct_pointer_block_number=((i==single_indirect_pointer_block_number-1)?(((current_inode->size-72*RD_BLOCK_SIZE)%(64*RD_BLOCK_SIZE))/RD_BLOCK_SIZE+1):64);
 			for(j=0;j<direct_pointer_block_number;j++){
-				current_direct_blockid=(uint32_t)(rd[current_single_indirect_blockid*BLOCK_SIZE+4*j]) |
-								((uint32_t)(rd[current_single_indirect_blockid*BLOCK_SIZE+4*j+1])<<BYTELEN) | 
-								((uint32_t)(rd[current_single_indirect_blockid*BLOCK_SIZE+4*j+2])<<(2*BYTELEN)) | 
-								((uint32_t)(rd[current_single_indirect_blockid*BLOCK_SIZE+4*j+3])<<(3*BYTELEN));
+				current_direct_blockid=(uint32_t)(rd[current_single_indirect_blockid*RD_BLOCK_SIZE+4*j]) |
+								((uint32_t)(rd[current_single_indirect_blockid*RD_BLOCK_SIZE+4*j+1])<<BYTELEN) | 
+								((uint32_t)(rd[current_single_indirect_blockid*RD_BLOCK_SIZE+4*j+2])<<(2*BYTELEN)) | 
+								((uint32_t)(rd[current_single_indirect_blockid*RD_BLOCK_SIZE+4*j+3])<<(3*BYTELEN));
 	
 				for(k=0;k<16;k++){
-					read_dir_entry(&rd[current_direct_blockid*BLOCK_SIZE+k*16],current_dir_entry);
+					read_dir_entry(&rd[current_direct_blockid*RD_BLOCK_SIZE+k*16],current_dir_entry);
 					if(strcmp(current_dir_entry->filename,path_list->filename)==0){
 						find_next_level_entry=1;
 						current_inodeid=current_dir_entry->InodeNo;

@@ -15,7 +15,7 @@
 #define DATA_LIMIT         2097151 //2^21-1
 #define RAMDISK_SIZE       2097152 //2MB
 #define BYTELEN            8
-#define BLOCK_SIZE         256
+#define RD_BLOCK_SIZE      256
 #define BLOCK_NUM          8192
 // Defined by Sean
 #define ENTRY_SIZE         16
