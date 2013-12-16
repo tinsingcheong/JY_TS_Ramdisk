@@ -120,7 +120,7 @@ int main () {
 	exit(EXIT_FAILURE);
     }
     printf("memsetting\n");
-	//fflush(stdout);
+	fflush(stdout);
     memset (pathname, 0, 80);
   }   
 

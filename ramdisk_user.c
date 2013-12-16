@@ -156,11 +156,11 @@ int rd_unlink (char *pathname)
 {
     struct rd_ops_arg_list rd_args;
     printf("In rd_unlink already!");
-
+	fflush(stdout);
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
     printf("Open ramdisk!");
-
+	fflush(stdout);
     if (fd_find_pathname(fd_table, pathname) == 0)
         return(-1);
 
