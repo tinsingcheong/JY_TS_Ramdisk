@@ -353,7 +353,7 @@ int main () {
     }
 
   //  index_node_number = atoi(&addr[14]);
-    index_inode_number= (addr[15]<<8)+addr[14];
+    index_node_number= (addr[15]<<8)+addr[14];
     printf ("Contents at addr: [%s,%d]\n", addr, index_node_number);
   }
   printf ("Test4 Done!\n");
