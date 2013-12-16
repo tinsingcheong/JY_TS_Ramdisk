@@ -192,7 +192,7 @@ uint8_t* file_byte_allocate(uint8_t* rd, uint16_t inodeNO){
 		update_inode(rd,inodeNO,file_inode);
 	//	printf("returning\n");
 #ifndef UL_DEBUG
-		vfree(file_inode)
+		vfree(file_inode);
 #endif
 		return return_val;
 
