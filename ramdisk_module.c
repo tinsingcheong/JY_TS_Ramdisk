@@ -8,6 +8,7 @@
 #include <linux/sched.h>
 #include <linux/types.h>
 #include <linux/string.h>
+#include <linux/semaphore.h>
 
 //#define KL_DEBUG
 //#include "constant.h"
@@ -57,6 +58,8 @@ static struct file_operations ramdisk_proc_operations;
 
 static struct proc_dir_entry *proc_entry;
 
+struct semaphore mutex;
+
 static int __init initialization_routine(void) {
   printk("<1> Loading module\n");
 
@@ -75,6 +78,7 @@ static int __init initialization_routine(void) {
 
   //init ramdisk
   rd=ramdisk_init();
+  sema_init(&mutex,1);
 
 
   return 0;
@@ -142,6 +146,8 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 	switch (cmd){
 
 	case RD_CREATE:
+		down_interruptible(&mutex);
+
 		copy_from_user(&ioc, (struct ramdisk_ops_arg_list*)arg, sizeof(struct ramdisk_ops_arg_list));
 		copy_from_user(path, ioc.pathname, ioc.pathname_len);
 		printk("<1> pathname is %s and %d\n",path,ioc.pathname_len);
@@ -152,37 +158,58 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 		ioc.ret=create_file(rd,ParentInodeNO,File);
 		printk("<1> The create ret value is %d\n", ioc.ret);
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
+		
+		up(&mutex);
 		break;
 
 	case RD_MKDIR:
+		down_interruptible(&mutex);
+
 		copy_from_user(&ioc, (struct ramdisk_ops_arg_list*)arg, sizeof(struct ramdisk_ops_arg_list));
 		copy_from_user(path, ioc.pathname, ioc.pathname_len);
 		seperate_path(path,ioc.pathname_len,parent,File);
 		ParentInodeNO=search_file(rd,parent);
 		ioc.ret=create_dir(rd,ParentInodeNO,File);
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
+		
+		up(&mutex);
+
 		break;
 
 	case RD_OPEN:
+		down_interruptible(&mutex);
+
 		copy_from_user(&ioc, (struct ramdisk_ops_arg_list*)arg, sizeof(struct ramdisk_ops_arg_list));
 		copy_from_user(path, ioc.pathname, ioc.pathname_len);
 		ioc.ret=search_file(rd,path);
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
+
+		up(&mutex);
 		break;
 
 	case RD_READ:
+		down_interruptible(&mutex);
+
 		copy_from_user(&ioc, (struct ramdisk_ops_arg_list*)arg, sizeof(struct ramdisk_ops_arg_list));
 		ioc.ret=read_ramdisk(rd, ioc.inodeNO, ioc.pos, ioc.buf, ioc.length);
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
+
+		up(&mutex);
 		break;
 
 	case RD_WRITE:
+		down_interruptible(&mutex);
+
 		copy_from_user(&ioc, (struct ramdisk_ops_arg_list*)arg, sizeof(struct ramdisk_ops_arg_list));
 		ioc.ret=write_ramdisk(rd, ioc.inodeNO, ioc.pos, ioc.buf, ioc.length);
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
+		
+		up(&mutex);
 		break;
 
 	case RD_LSEEK:
+		down_interruptible(&mutex);
+
 		copy_from_user(&ioc, (struct ramdisk_ops_arg_list*)arg, sizeof(struct ramdisk_ops_arg_list));
         size=get_file_size(rd, ioc.inodeNO);
 		if(size>ioc.length){
@@ -197,15 +224,21 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 			ioc.ret=-1;
 		}
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
+		
+		up(&mutex);
 		break;
 
 	case RD_UNLINK:
+		down_interruptible(&mutex);
+
 		copy_from_user(&ioc, (struct ramdisk_ops_arg_list*)arg, sizeof(struct ramdisk_ops_arg_list));
 		copy_from_user(path, ioc.pathname, ioc.pathname_len);
 		int inodeNO=search_file(rd,path);
 		if(inodeNO<0){
 			ioc.ret=-1;
 			copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
+
+			up(&mutex);
 			break;
 		}
 		seperate_path(path,ioc.pathname_len,parent,File);
@@ -213,6 +246,8 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 		if(ParentInodeNO<0){
 			ioc.ret=-1;
 			copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
+			
+			up(&mutex);
 			break;
 		}
 
@@ -225,19 +260,27 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 		if(inode->type==1){
 			ioc.ret=remove_file(rd,ParentInodeNO,inodeNO,File);
 			copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
+			
+			up(&mutex);
 			break;
 		}
 		if(inode->type==0){
 			ioc.ret=remove_dir(rd,ParentInodeNO,inodeNO,File);
 			copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
+			
+			up(&mutex);
 			break;
 		}
 		break;
 	case RD_READDIR:
+		down_interruptible(&mutex);
+		
 		copy_from_user(&ioc, (struct ramdisk_ops_arg_list*)arg, sizeof(struct ramdisk_ops_arg_list));
 
 		ioc.ret=readdir(rd, ioc.inodeNO, ioc.pos, ioc.buf);
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
+		
+		up(&mutex);
 		break;
 
 	default:
