@@ -19,7 +19,7 @@ int rd_create (char *pathname)
     printf("Open ramdisk!");
 
     rd_args.pathname = pathname;
-    rd_args.path_len = strlen(pathname);
+    rd_args.path_len = strlen(pathname)+1;
 
     printf("Create: Pass the struct to kernel!");
     ioctl(ioctl_rd_fd, RD_CREATE, &rd_args);
@@ -37,7 +37,7 @@ int rd_mkdir (char *pathname)
     printf("Open ramdisk!");
 
     rd_args.pathname = pathname;
-    rd_args.path_len = strlen(pathname);
+    rd_args.path_len = strlen(pathname)+1;
 
     ioctl(ioctl_rd_fd, RD_MKDIR, &rd_args);
     return rd_args.ret; 
@@ -54,7 +54,7 @@ int rd_open (char *pathname)
     printf("Open ramdisk!");
 
     rd_args.pathname = pathname;
-    rd_args.path_len = strlen(pathname);
+    rd_args.path_len = strlen(pathname)+1;
     
     ioctl(ioctl_rd_fd, RD_OPEN, &rd_args);
 
@@ -165,7 +165,7 @@ int rd_unlink (char *pathname)
         return(-1);
 
     rd_args.pathname = pathname;
-    rd_args.path_len = strlen(pathname);
+    rd_args.path_len = strlen(pathname)+1;
 
     ioctl(ioctl_rd_fd, RD_UNLINK, &rd_args);
 
