@@ -26,10 +26,6 @@ struct rd_inode{
 	uint32_t BlockPointer[10];
 };
 
-struct mode_t{
-    uint8_t write;
-    uint8_t read;
-};
 struct rd_path{
 	char filename[14];
 	struct rd_path* next;
