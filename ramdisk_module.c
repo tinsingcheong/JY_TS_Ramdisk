@@ -189,7 +189,7 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 			//ioc.length=ioc.length;
 			ioc.ret=0;
 		}
-		else if(size<=ioc.length && size>=0;){
+		else if(size<=ioc.length && size>=0){
 			ioc.length=-1;//end of file
 			ioc.ret=-1;
 		}
