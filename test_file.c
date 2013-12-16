@@ -69,8 +69,8 @@ int my_readdir(int fd, char* str)
 // #define's to control whether single indirect or
 // double indirect block pointers are tested
 
-//#define TEST_SINGLE_INDIRECT
-//#define TEST_DOUBLE_INDIRECT
+#define TEST_SINGLE_INDIRECT
+#define TEST_DOUBLE_INDIRECT
 
 
 #define MAX_FILES 1023
