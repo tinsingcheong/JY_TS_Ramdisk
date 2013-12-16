@@ -112,10 +112,17 @@ static void seperate_path(char* path, int path_len, char* parent, char* file){
 		file[j-i-1]=path[j];
 	}
 	file[j-i-1]='\0';
-	for(j=0;j<i;j++){
-		parent[j]=path[j];
+	if(i!=0){
+		for(j=0;j<i;j++){
+			parent[j]=path[j];
+		}
+		parent[j]='\0';
 	}
-	parent[j]='\0';
+	else{
+		parent[0]='/';
+		parent[1]='\0';
+	}
+
 
 }
 
