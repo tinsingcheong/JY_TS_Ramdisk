@@ -97,6 +97,7 @@ int main () {
   memset (data2, '2', sizeof (data2));
   memset (data3, '3', sizeof (data3));
 
+  printf("Memset Done!\n");
 
 #ifdef TEST1
 
@@ -135,6 +136,7 @@ int main () {
     
     memset (pathname, 0, 80);
   }
+  printf("Test1 Done!\n");
 
 #endif // TEST1
   
@@ -173,6 +175,7 @@ int main () {
 
     exit(EXIT_FAILURE);
   }
+  printf("Test2 Done!\n");
 
 #ifdef TEST_SINGLE_INDIRECT
   
@@ -185,6 +188,7 @@ int main () {
 
     exit(EXIT_FAILURE);
   }
+  printf("Test Single Indirect Done!\n");
 
 #ifdef TEST_DOUBLE_INDIRECT
 
@@ -197,6 +201,7 @@ int main () {
 
     exit(EXIT_FAILURE);
   }
+  printf("Test Double Indirect Done!\n");
 
 #endif // TEST_DOUBLE_INDIRECT
 
@@ -227,6 +232,7 @@ int main () {
   }
   /* Should be all 1s here... */
   printf ("Data at addr: %s\n", addr);
+  printf("Test3 Done!\n");
 
 #ifdef TEST_SINGLE_INDIRECT
 
@@ -241,6 +247,7 @@ int main () {
   }
   /* Should be all 2s here... */
   printf ("Data at addr: %s\n", addr);
+  printf ("Test Single Indirect Done!\n");
 
 #ifdef TEST_DOUBLE_INDIRECT
 
@@ -255,6 +262,7 @@ int main () {
   }
   /* Should be all 3s here... */
   printf ("Data at addr: %s\n", addr);
+  printf ("Test Double Indirect Done!\n");
 
 #endif // TEST_DOUBLE_INDIRECT
 
@@ -338,6 +346,7 @@ int main () {
     index_node_number = atoi(&addr[14]);
     printf ("Contents at addr: [%s,%d]\n", addr, index_node_number);
   }
+  printf ("Test4 Done!\n");
 #endif // USE_RAMDISK
 #endif // TEST4
 
@@ -385,6 +394,7 @@ int main () {
       memset (pathname, 0, 80);
     }
   }
+  printf ("Test4 Done!\n");
 
 #endif // TEST5
   
