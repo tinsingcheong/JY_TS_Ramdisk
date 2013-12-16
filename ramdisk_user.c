@@ -65,7 +65,7 @@ int rd_open (char *pathname)
         fd_table[fd].valid = 1;
         fd_table[fd].file_pos = 0;
         fd_table[fd].inodeNO = rd_args.inodeNO;
-        fd_table[fd].pathname = pathname;
+        strcpy(fd_table[fd].pathname,pathname);
         return fd;
     }
     else 
