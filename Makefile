@@ -1,5 +1,5 @@
 obj-m += Ramdisk.o
-ramdisk_module-objs := ramdisk.o file_func.o rw.o ramdisk_module.o
+Ramdisk-objs := ramdisk.o file_func.o rw.o ramdisk_module.o
 
 GCC = gcc
 CXXFLAGS = -DKL_DEBUG
