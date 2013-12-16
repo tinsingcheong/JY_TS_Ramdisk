@@ -9,6 +9,7 @@
 
 #ifndef UL_DEBUG
 #include<linux/types.h>
+#include<linux/vmalloc.h>
 #endif
 
 #ifdef UL_DEBUG

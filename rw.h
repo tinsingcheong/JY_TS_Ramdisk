@@ -3,6 +3,7 @@
 
 //#define KL_DEBUG
 #ifndef UL_DEBUG
+#include<linux/vmalloc.h>
 #include<linux/types.h>
 #endif
 

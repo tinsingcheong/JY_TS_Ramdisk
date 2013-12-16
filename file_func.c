@@ -17,6 +17,7 @@
 #include <linux/sched.h>
 #include <linux/types.h>
 #include <linux/string.h>
+#include <linux/vmalloc.h>
 #endif
 
 #ifdef UL_DEBUG
