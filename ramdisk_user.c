@@ -30,7 +30,7 @@ int rd_create (char *pathname)
 int rd_mkdir (char *pathname)
 {
     struct rd_ops_arg_list rd_args;
-    printf("In rd_mkdir already!");
+    printf("In rd_mkdir already!\n");
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
@@ -47,7 +47,7 @@ int rd_open (char *pathname)
 {
     struct rd_ops_arg_list rd_args;
     int fd;
-    printf("In rd_open already!");
+    printf("In rd_open already!\n");
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
@@ -76,7 +76,7 @@ int rd_open (char *pathname)
 int rd_close (int fd)
 {
     struct rd_ops_arg_list rd_args;
-    printf("In rd_close already!");
+    printf("In rd_close already!\n");
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
@@ -92,7 +92,7 @@ int rd_close (int fd)
 int rd_read (int fd, char *address, int num_bytes)
 {
     struct rd_ops_arg_list rd_args;
-    printf("In rd_read already!");
+    printf("In rd_read already!\n");
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
@@ -114,7 +114,7 @@ int rd_read (int fd, char *address, int num_bytes)
 int rd_write (int fd, char *address, int num_bytes)
 {
     struct rd_ops_arg_list rd_args;
-    printf("In rd_write already!");
+    printf("In rd_write already!\n");
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
@@ -166,7 +166,7 @@ int rd_lseek (int fd, int offset)
 int rd_unlink (char *pathname)
 {
     struct rd_ops_arg_list rd_args;
-    printf("In rd_unlink already!");
+    printf("In rd_unlink already!\n");
 	fflush(stdout);
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
@@ -186,7 +186,7 @@ int rd_unlink (char *pathname)
 int rd_readdir (int fd, char *address)
 {
     struct rd_ops_arg_list rd_args;
-    printf("In rd_readdir already!");
+    printf("In rd_readdir already!\n");
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
@@ -203,7 +203,7 @@ int rd_readdir (int fd, char *address)
 
 int rd_snyc( )
 {
-    printf("In rd_sync already!");
+    printf("In rd_sync already!\n");
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
