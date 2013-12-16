@@ -73,7 +73,7 @@ int my_readdir(int fd, char* str)
 #define TEST_DOUBLE_INDIRECT
 
 
-#define MAX_FILES 524
+#define MAX_FILES 1024
 #define BLK_SZ 256		/* Block size */
 #define DIRECT 8		/* Direct pointers in location attribute */
 #define PTR_SZ 4		/* 32-bit [relative] addressing */
@@ -103,11 +103,13 @@ int main () {
 
   /* ****TEST 1: MAXIMUM file creation**** */
 
+  printf("In Test1!\n");
   /* Generate MAXIMUM regular files */
   for (i = 0; i < MAX_FILES + 1; i++) { // go beyond the limit
     sprintf (pathname, PATH_PREFIX "/file%d", i);
     
     retval = CREAT (pathname);
+    printf("Create file %d!\n", i);
     
     if (retval < 0) {
       fprintf (stderr, "creat: File creation error! status: %d (%s)\n",
@@ -126,6 +128,7 @@ int main () {
     sprintf (pathname, PATH_PREFIX "/file%d", i);
     
     retval = UNLINK (pathname);
+    printf("Remove file %d!\n", i);
     
     if (retval < 0) {
       fprintf (stderr, "unlink: File deletion error! status: %d\n",
@@ -156,6 +159,8 @@ int main () {
   }
 
   retval =  OPEN (PATH_PREFIX "/bigfile"); /* Open file to write to it */
+  printf("Open file done!\n");
+    
   
   if (retval < 0) {
     fprintf (stderr, "open: File open error! status: %d\n",
@@ -168,6 +173,7 @@ int main () {
 
   /* Try writing to all direct data blocks */
   retval = WRITE (fd, data1, sizeof(data1));
+  printf("Write file done!\n");
   
   if (retval < 0) {
     fprintf (stderr, "write: File write STAGE1 error! status: %d\n",
@@ -175,7 +181,7 @@ int main () {
 
     exit(EXIT_FAILURE);
   }
-  printf("Test2 Done!\n");
+  printf("Test2 first stage Done!\n");
 
 #ifdef TEST_SINGLE_INDIRECT
   
@@ -188,7 +194,7 @@ int main () {
 
     exit(EXIT_FAILURE);
   }
-  printf("Test Single Indirect Done!\n");
+  printf("Test2 Single Indirect Done!\n");
 
 #ifdef TEST_DOUBLE_INDIRECT
 
@@ -201,7 +207,7 @@ int main () {
 
     exit(EXIT_FAILURE);
   }
-  printf("Test Double Indirect Done!\n");
+  printf("Test2 Double Indirect Done!\n");
 
 #endif // TEST_DOUBLE_INDIRECT
 
@@ -232,7 +238,7 @@ int main () {
   }
   /* Should be all 1s here... */
   printf ("Data at addr: %s\n", addr);
-  printf("Test3 Done!\n");
+  printf("Test3 1st stage Done!\n");
 
 #ifdef TEST_SINGLE_INDIRECT
 
@@ -247,7 +253,7 @@ int main () {
   }
   /* Should be all 2s here... */
   printf ("Data at addr: %s\n", addr);
-  printf ("Test Single Indirect Done!\n");
+  printf ("Test3 Single Indirect Done!\n");
 
 #ifdef TEST_DOUBLE_INDIRECT
 
@@ -262,7 +268,7 @@ int main () {
   }
   /* Should be all 3s here... */
   printf ("Data at addr: %s\n", addr);
-  printf ("Test Double Indirect Done!\n");
+  printf ("Test3 Double Indirect Done!\n");
 
 #endif // TEST_DOUBLE_INDIRECT
 
