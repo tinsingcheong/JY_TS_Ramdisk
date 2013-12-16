@@ -21,7 +21,7 @@
 MODULE_LICENSE("GPL");
 
 /* attribute structures */
-struct ramdisk_ops_arg_list {
+struct rd_ops_arg_list {
   uint8_t* pathname;
   int pathname_len;
 
