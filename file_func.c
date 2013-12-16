@@ -117,6 +117,10 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         update_inode(rd, InodeNO, Inode); // Update the new Inode
         // Update the Parent Inode information
         read_inode(rd, ParentInodeNO, ParentInode);
+
+        if (find_same_name(rd, ParentInode) == -1)
+            return(-1);
+        
 #ifdef UL_DEBUG
 //        printf("Read: ParentInode size is %d.\n", ParentInode->size);
 #endif
@@ -409,6 +413,10 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         update_inode(rd, InodeNO, Inode); // Update the new Inode
         // Update the Parent Inode information
         read_inode(rd, ParentInodeNO, ParentInode);
+
+        if (find_same_name(rd, ParentInode) == -1)
+            return(-1);
+
 #ifdef UL_DEBUG
 //        printf("create_dir: Read: ParentInode size is %d.\n", ParentInode->size);
 #endif
@@ -1112,4 +1120,46 @@ int delete_dir_entry(uint8_t* rd, struct rd_inode* ParentInode, uint16_t ParentI
         return 0;
     } 
 
+}
+
+int find_same_name(uint8_t* rd, struct rd_inode* ParentInode)
+{
+    int blockNO;
+    int read_blockNO;
+    int read_block_tableNO;
+    int read_double_tableNO;
+    int i,j;
+    struct dir_entry* ParentDirEntry;
+    blockNO = ParentInode->size/RD_BLOCK_SIZE;
+    for (i=0;i<=blockNO;i++) {
+        if (i>=0 && i<=7) {
+            for (j=0;j<16;j++) {
+                read_blockNO = ParentInode->BlockPointer[i];
+                read_dir_entry(&rd[read_blockNO*RD_BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
+                if (strcmp(ParentDirEntry->filename, name)==0){
+                    return(-1);
+                }
+            }
+        }
+        else if (i>7 && i<=7+64) {
+            for (j=0;j<16;j++) {
+                read_block_tableNO = ParentInode->BlockPointer[8];
+                read_blockNO = *((uint32_t*)(rd+read_block_tableNO*RD_BLOCK_SIZE+(i-8)*4));
+                read_dir_entry(&rd[read_blockNO*RD_BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
+                if (strcmp(ParentDirEntry->filename, name)==0)
+                    return(-1);
+            }
+        }
+        else if (i>7+64 && i<=7+64+64*64) {
+            for (j=0;j<16;j++) {
+                read_double_tableNO = ParentInode->BlockPointer[9];
+                read_block_tableNO = *((uint32_t*)(rd+read_double_tableNO*RD_BLOCK_SIZE+((i-(8+64))*4/64)));
+                read_blockNO = *((uint32_t*)(rd+read_block_tableNO*RD_BLOCK_SIZE+((i-(8+64))%64)*4));
+                read_dir_entry(&rd[read_blockNO*RD_BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
+                if (strcmp(ParentDirEntry->filename, name)==0)
+                    return(-1);
+            }
+        }
+    }
+    return 0;
 }

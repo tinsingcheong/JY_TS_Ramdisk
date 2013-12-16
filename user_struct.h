@@ -2,22 +2,27 @@
 #define USER_STRUCT_H
 
 struct file_object{
+    int valid;
 	int file_pos;
-	int inode_ptr;
-
+	uint16_t inodeNO;
 };
 
+extern struct file_object fd_table[1024];
+/*
 struct fd_table_entry{
 	int fd;
 	struct file_object;
 	struct fd_table_entry* next;
-};
+};*/
 
 struct ramdisk_ops_arg_list {
     uint8_t* pathname;
-    int pathname_len;
+    int path_len;
     uint16_t inodeNO;
-int 
+    int pos;
+    uint8_t* buf;
+    int buf_len;
+    int ret;
 };
 
 int rd_create (char *pathname);
