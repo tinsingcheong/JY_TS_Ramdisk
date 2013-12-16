@@ -29,6 +29,18 @@
 int get_file_size (uint8_t* rd, uint16_t InodeNO)
 {
     struct rd_inode* Inode;
+#ifdef UL_DEBUG
+	if(!(Inode=(struct rd_inode*)malloc(sizeof(struct rd_inode)))){
+		printf(" NO mem\n");
+		exit (-1);
+	}
+#endif
+#ifndef UL_DEBUG
+	if(!(Inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
+		printk("<1> NO mem\n");
+		return -1;
+	}
+#endif
     read_inode(rd, InodeNO, Inode);
     return Inode->size; // return the size of the file 
 }
