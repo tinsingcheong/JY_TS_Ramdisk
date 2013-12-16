@@ -119,14 +119,15 @@ int main () {
       if (i != MAX_FILES)
 	exit(EXIT_FAILURE);
     }
-    
+    printf("memsetting\n");
+	fflush(stdout);
     memset (pathname, 0, 80);
   }   
 
   /* Delete all the files created */
   for (i = 0; i < MAX_FILES; i++) { 
     sprintf (pathname, PATH_PREFIX "/file%d", i);
-    
+	printf("ENtering unlink\n");
     retval = UNLINK (pathname);
     printf("Remove file %d!\n", i);
     
