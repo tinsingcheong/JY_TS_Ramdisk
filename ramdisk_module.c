@@ -102,7 +102,7 @@ static void __exit cleanup_routine(void) {
 
   printk("<1> Dumping module\n");
   remove_proc_entry("ramdisk", NULL);
-
+  vfree(rd);
   return;
 }
 
