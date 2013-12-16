@@ -114,7 +114,9 @@ uint8_t* file_byte_locate(uint8_t* rd, uint16_t inodeNO, int pos){
 		}
 
 	}
-
+#ifndef UL_DEBUG
+	vfree(file_inode);
+#endif
 	return return_val;
 
 
@@ -431,6 +433,9 @@ int read_ramdisk(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf, int lengt
 #endif
 		count++;
 	}
+#ifndef UL_DEBUG
+	vfree(file_inode);
+#endif
 
 	return count;
 
@@ -509,6 +514,9 @@ int write_ramdisk(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf, int leng
 	}
 
 	partial_update_superblock(rd);
+#ifndef UL_DEBUG
+	vfree(file_inode);
+#endif
 
 	return count;
 
