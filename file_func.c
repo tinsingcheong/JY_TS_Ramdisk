@@ -56,7 +56,7 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
     int new_entry_block_id;
     int new_entry_table_block_id;
     uint8_t entry_pos;
-    double temp;
+    int temp;
 	int k;
 #ifdef UL_DEBUG   
 	if(!(SuperBlock=(struct rd_super_block*)malloc(sizeof(struct rd_super_block)))){
@@ -128,13 +128,13 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
 #ifdef UL_DEBUG
 //        printf("Read: ParentInode size is %d.\n", ParentInode->size);
 #endif
-        temp = (double)(ParentInode->size)/RD_BLOCK_SIZE;
-        if (temp - (int)temp > 0) { // if the current blocks are not filled up
-            blockNO = (int)temp;
+        temp = (ParentInode->size)%RD_BLOCK_SIZE;
+        if (temp > 0) { // if the current blocks are not filled up
+            blockNO = (ParentInode->size)/RD_BLOCK_SIZE;
             new_block_flag = 0;
         }
-        else if (temp-(int)temp == 0) { // if the current blocks are filled up
-            blockNO = (int)temp;
+        else if (temp == 0) { // if the current blocks are filled up
+            blockNO = (ParentInode->size)/RD_BLOCK_SIZE;
             new_block_id = find_next_free_block(rd);
             if (new_block_id == -1) {
 #ifdef UL_DEBUG
@@ -357,7 +357,7 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
     int new_entry_block_id;
     int new_entry_table_block_id;
     uint8_t entry_pos;
-    double temp;
+    int temp;
 	int k;
 #ifdef UL_DEBUG  
 	if(!(SuperBlock=(struct rd_super_block*)malloc(sizeof(struct rd_super_block)))){
@@ -434,13 +434,13 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
     //    printf("create_dir1: Read: ParentInode size is %d.\n", ParentInode->size);
 #endif
 
-        temp = (double)(ParentInode->size)/RD_BLOCK_SIZE;
-        if (temp - (int)temp > 0) { // if the current blocks are not filled up
-            blockNO = (int)temp;
+        temp = (ParentInode->size)%RD_BLOCK_SIZE;
+        if (temp > 0) { // if the current blocks are not filled up
+            blockNO = (ParentInode->size)/RD_BLOCK_SIZE;
             new_block_flag = 0;
         }
-        else if (temp-(int)temp == 0) { // if the current blocks are filled up
-            blockNO = (int)temp;
+        else if (temp == 0) { // if the current blocks are filled up
+            blockNO = (ParentInode->size)/RD_BLOCK_SIZE;
             new_block_id = find_next_free_block(rd);
             if (new_block_id == -1) {
 #ifdef UL_DEBUG
@@ -650,7 +650,7 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
     int read_double_tableNO;
     int i,j;
     uint8_t entry_pos;
-    double temp;
+    int temp;
 #ifdef UL_DEBUG
 	if(!(SuperBlock=(struct rd_super_block*)malloc(sizeof(struct rd_super_block)))){
 		fprintf(stderr,"No mem space!\n");
@@ -699,11 +699,11 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
     
     // Clear the inode bitmap and data bitmap of the selected file
     clr_inode_bitmap(rd, InodeNO);
-    temp = (double)(Inode->size/RD_BLOCK_SIZE);
-    if ((temp - (int)temp > 0)||(temp == 0))
-        blockNO = (int)temp;
+    temp = (Inode->size)%RD_BLOCK_SIZE;
+    if ((temp > 0)||(Inode->size == 0))
+        blockNO = (Inode->size)/RD_BLOCK_SIZE;
     else 
-        blockNO = (int)temp-1;
+        blockNO = (Inode->size)/RD_BLOCK_SIZE-1;
 
     // Clear the file blocks in the bitmap 
     for (i=0;i<blockNO;i++)
@@ -820,7 +820,7 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
     int entryNO;
     int deleted_blockNO;
     int deleted_entryNO;
-    double temp;
+    int temp;
     uint8_t entry_pos;
     int i,j;
 #ifdef UL_DEBUG   
@@ -890,16 +890,14 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
 #ifdef UL_DEBUG
 //        printf("remove_dir: Need to delete the children files.\n");
 #endif
-        temp = (double)i/16;
+        temp = i%16;
 #ifdef UL_DEBUG
 //        printf("remove_dir: Temp is %lf. \n", temp-(int)temp);
 #endif
-        if ((temp - (int)temp >0) || (temp == 0))
-        {
-            blockNO_file = (int)temp;
-        }
+        if ((temp >0) || (i == 0))
+            blockNO_file = i/16;
         else
-            blockNO_file = (int)temp-1;
+            blockNO_file = i/16-1;
 #ifdef UL_DEBUG
 //        printf("remove_dir: BlockNO_file is %d.\n", blockNO_file);
 #endif
@@ -939,11 +937,11 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
     }
     // Clear the inode bitmap and data bitmap of the selected file
     clr_inode_bitmap(rd, InodeNO);
-    temp = Inode->size/RD_BLOCK_SIZE;
-    if (temp - (int)temp > 0 || (temp==0))
-        blockNO = (int)temp;
+    temp = Inode->size%RD_BLOCK_SIZE;
+    if (temp > 0 || (Inode->size==0))
+        blockNO = (Inode->size)/RD_BLOCK_SIZE;
     else 
-        blockNO = (int)temp-1;
+        blockNO = (Inode->size)/RD_BLOCK_SIZE-1;
     
     for (i=0;i<blockNO;i++)
     {
