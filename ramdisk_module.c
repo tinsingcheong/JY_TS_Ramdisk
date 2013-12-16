@@ -189,7 +189,9 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 
 		copy_from_user(&ioc, (struct ramdisk_ops_arg_list*)arg, sizeof(struct ramdisk_ops_arg_list));
 		copy_from_user(path, ioc.pathname, ioc.pathname_len);
+		printk("<1> opening file %s\n", path);
 		ioc.ret=search_file(rd,path);
+		printk("<1> the %s has inode is %d\n", path, ioc.ret);
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
 
 		up(&mutex);
