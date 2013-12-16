@@ -595,6 +595,8 @@ int readdir(uint8_t* rd, uint16_t inodeNO, int pos, uint8_t* buf){
 #endif
 #ifndef UL_DEBUG
 		copy_to_user(buf+i, ptr, sizeof(uint8_t));
+		printk("<1> Read count: %d reading %c\n",count,*ptr);
+
 #endif
 		count++;
 	}
