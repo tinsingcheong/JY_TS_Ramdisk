@@ -12,23 +12,29 @@ int ioctl_rd_fd;
 int rd_create (char *pathname)
 {
     struct rd_ops_arg_list rd_args;
+    printf("In rd_create already!");
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
+    printf("Open ramdisk!");
 
     rd_args.pathname = pathname;
     rd_args.path_len = strlen(pathname);
 
+    printf("Create: Pass the struct to kernel!");
     ioctl(ioctl_rd_fd, RD_CREATE, &rd_args);
+    printf("Create: Return value is %d!", rd_args.ret);
     return rd_args.ret; 
 }
 
 int rd_mkdir (char *pathname)
 {
     struct rd_ops_arg_list rd_args;
+    printf("In rd_mkdir already!");
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
+    printf("Open ramdisk!");
 
     rd_args.pathname = pathname;
     rd_args.path_len = strlen(pathname);
@@ -41,9 +47,11 @@ int rd_open (char *pathname)
 {
     struct rd_ops_arg_list rd_args;
     int fd;
+    printf("In rd_open already!");
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
+    printf("Open ramdisk!");
 
     rd_args.pathname = pathname;
     rd_args.path_len = strlen(pathname);
@@ -67,9 +75,11 @@ int rd_open (char *pathname)
 int rd_close (int fd)
 {
     struct rd_ops_arg_list rd_args;
+    printf("In rd_close already!");
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
+    printf("Open ramdisk!");
 
     if (fd_table[fd].valid == 0)
         return(-1); // File is not open
@@ -81,9 +91,11 @@ int rd_close (int fd)
 int rd_read (int fd, char *address, int num_bytes)
 {
     struct rd_ops_arg_list rd_args;
+    printf("In rd_read already!");
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
+    printf("Open ramdisk!");
 
     if (fd_table[fd].valid == 0)
         return(-1); // File is not open
@@ -101,9 +113,11 @@ int rd_read (int fd, char *address, int num_bytes)
 int rd_write (int fd, char *address, int num_bytes)
 {
     struct rd_ops_arg_list rd_args;
+    printf("In rd_write already!");
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
+    printf("Open ramdisk!");
 
     if (fd_table[fd].valid == 0)
         return(-1); // File is not open
@@ -121,9 +135,11 @@ int rd_write (int fd, char *address, int num_bytes)
 int rd_lseek (int fd, int offset)
 {
     struct rd_ops_arg_list rd_args;
+    printf("In rd_lseek already!");
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
+    printf("Open ramdisk!");
 
     if (fd_table[fd].valid == 0)
         return(-1); // File is not open
@@ -139,9 +155,11 @@ int rd_lseek (int fd, int offset)
 int rd_unlink (char *pathname)
 {
     struct rd_ops_arg_list rd_args;
+    printf("In rd_unlink already!");
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
+    printf("Open ramdisk!");
 
     if (fd_find_pathname(fd_table, pathname) == 0)
         return(-1);
@@ -157,9 +175,11 @@ int rd_unlink (char *pathname)
 int rd_readdir (int fd, char *address)
 {
     struct rd_ops_arg_list rd_args;
+    printf("In rd_readdir already!");
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
+    printf("Open ramdisk!");
 
     rd_args.inodeNO = fd_table[fd].inodeNO;
     rd_args.buf     = address;
