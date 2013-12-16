@@ -1,5 +1,5 @@
-obj-m += ramdisk_module.o
-ramdisk_module-objs := ramdisk.o file_func.o rw.o 
+obj-m += Ramdisk.o
+ramdisk_module-objs := ramdisk.o file_func.o rw.o ramdisk_module.o
 
 GCC = gcc
 CXXFLAGS = -DKL_DEBUG
@@ -7,7 +7,7 @@ KDIR = /lib/modules/$(shell uname -r)/build
 PWD = $(shell pwd)
 
 all:
-	make -C $(KDIR) CFLAGS=$(CXXFLAGS) SUBDIRS=$(PWD) modules
+	make -C $(KDIR) SUBDIRS=$(PWD) modules
 clean:
 	make -C $(KDIR) SUBDIRS=$(PWD) clean
 
