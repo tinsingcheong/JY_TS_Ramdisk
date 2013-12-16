@@ -136,9 +136,13 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 	case RD_CREATE:
 		copy_from_user(&ioc, (struct ramdisk_ops_arg_list*)arg, sizeof(struct ramdisk_ops_arg_list));
 		copy_from_user(path, ioc.pathname, ioc.pathname_len);
+		printk("<1> pathname is %s and %d\n",path,ioc.pathname_len);
 		seperate_path(path,ioc.pathname_len,parent,File);
+		printk("<1> After seperating the parent is %s and File is %s\n",parent, File);
 		ParentInodeNO=search_file(rd,parent);
+		printk("<1> The parent inode No is %d\n",ParentInodeNO);
 		ioc.ret=create_file(rd,ParentInodeNO,File);
+		printk("<1> The create ret value is %d\n", ioc.ret);
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
 		break;
 
