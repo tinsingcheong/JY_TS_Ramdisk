@@ -219,6 +219,7 @@ int main () {
 #ifdef TEST3
 
   /* ****TEST 3: Seek and Read file test**** */
+  printf("Start lseeking\n");
   retval = LSEEK (fd, 0);	/* Go back to the beginning of your file */
 
   if (retval < 0) {
@@ -228,6 +229,7 @@ int main () {
     exit(EXIT_FAILURE);
   }
 
+  printf("Finish Lseeking\n");
   /* Try reading from all direct data blocks */
   retval = READ (fd, addr, sizeof(data1));
   

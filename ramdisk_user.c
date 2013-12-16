@@ -135,7 +135,7 @@ int rd_write (int fd, char *address, int num_bytes)
 int rd_lseek (int fd, int offset)
 {
     struct rd_ops_arg_list rd_args;
-    printf("In rd_lseek already!");
+    printf("In rd_lseek already seek %d !\n",fd);
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
