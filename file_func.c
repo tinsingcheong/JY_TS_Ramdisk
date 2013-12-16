@@ -57,8 +57,8 @@ int get_file_size (uint8_t* rd, uint16_t InodeNO)
 		return -1;//dir file should return -1
 	}
 }
-
-int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
+// Access rights begin
+int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name, mode_t mode) // Access rights end
 {
     if (strlen(name) >= 14) {
 #ifdef UL_DEBUG
@@ -140,6 +140,10 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         set_inode_bitmap(rd, InodeNO);
         Inode->type = (uint8_t) 0x01; // Initialize the type as regular file
         Inode->size = (uint32_t) 0x0; // Initialize the size as 0
+        // Access rights begin
+        Inode->write = mode.write;
+        Inode->read = mode.read;
+        // Access rights end
         update_inode(rd, InodeNO, Inode); // Update the new Inode
         // Update the Parent Inode information
         read_inode(rd, ParentInodeNO, ParentInode);
@@ -1261,3 +1265,11 @@ int find_same_name(uint8_t* rd, struct rd_inode* ParentInode, char* name)
 #endif
     return 0;
 }
+// Access rights begin
+int chmod_reg_file (uint8_t* rd, struct rd_inode* Inode, struct mode_t mode)
+{
+    Inode->write = mode.write;
+    Inode->read = mode.read;
+    return 0;
+}
+// Access rights end
