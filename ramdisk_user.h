@@ -16,7 +16,7 @@ struct file_object{
     int valid;
 	int file_pos;
 	uint16_t inodeNO;
-    char* pathname;
+    char pathname[100];
 };
 
 struct file_object fd_table[1024];
