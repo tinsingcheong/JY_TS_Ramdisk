@@ -284,7 +284,7 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 		down_interruptible(&mutex);
 		
 		copy_from_user(&ioc, (struct ramdisk_ops_arg_list*)arg, sizeof(struct ramdisk_ops_arg_list));
-
+		printk("<1> reading the dir whose inode is %d\n",ioc.inodeNO);
 		ioc.ret=readdir(rd, ioc.inodeNO, ioc.pos, ioc.buf);
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
 		
