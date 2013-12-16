@@ -191,7 +191,7 @@ int rd_readdir (int fd, char *address)
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
     printf("readdir ramdisk!");
-	printf("starting reading dir for %s whose fd=%d, inode=%d",fd.pathname,fd,fd_table[fd].inodeNO);
+	printf("starting reading dir for %s whose fd=%d, inode=%d",fd_table[fd].pathname,fd,fd_table[fd].inodeNO);
     rd_args.inodeNO = fd_table[fd].inodeNO;
     rd_args.buf     = address;
     ioctl(ioctl_rd_fd, RD_READDIR, &rd_args);
