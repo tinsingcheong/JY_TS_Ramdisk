@@ -809,7 +809,7 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
 		vfree(SuperBlock);
 		vfree(Inode);
 		vfree(ParentInode);
-		vfree(NewDirEntry);
+		vfree(ParentDirEntry);
 #endif
 
     return 0;
@@ -1046,7 +1046,7 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
 		vfree(SuperBlock);
 		vfree(Inode);
 		vfree(ParentInode);
-		vfree(NewDirEntry);
+		vfree(DeleteInode);
 		vfree(ParentDirEntry);
 		vfree(DeleteEntry);
 #endif
