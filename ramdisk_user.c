@@ -140,7 +140,7 @@ int rd_lseek (int fd, int offset)
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
     printf("Open ramdisk!");
-	fflush(stdout)
+	fflush(stdout);
     if (fd_table[fd].valid == 0)
         return(-1); // File is not open
 
