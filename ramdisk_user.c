@@ -59,6 +59,7 @@ int rd_open (char *pathname)
     ioctl(ioctl_rd_fd, RD_OPEN, &rd_args);
 
     fd = fd_search_fd(fd_table, rd_args.inodeNO);
+	printf("%s has fd=%d and inode=%d\n",fd,fd_table[fd].inodeNO);
     if (fd == -1){ 
         // If the file is not registered in the fd table
         fd = fd_find_free_fd(fd_table);
@@ -189,8 +190,8 @@ int rd_readdir (int fd, char *address)
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
-    printf("Open ramdisk!");
-
+    printf("readdir ramdisk!");
+	printf("fd=%d, inode=%d",fd,inodeNO);
     rd_args.inodeNO = fd_table[fd].inodeNO;
     rd_args.buf     = address;
     ioctl(ioctl_rd_fd, RD_READDIR, &rd_args);
