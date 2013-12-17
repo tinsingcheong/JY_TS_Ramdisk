@@ -408,7 +408,7 @@ int main () {
       memset (pathname, 0, 80);
     }
   }
-  printf ("Test4 Done!\n");
+  printf ("Test5 Done!\n");
 
 #endif // TEST5
   
