@@ -1285,7 +1285,7 @@ int chmod_reg_file(uint8_t* rd, uint16_t InodeNO, int mode)
 	if (!(Inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode))))
 	{
 		printk("No mem space!\n");
-		exit(-1);
+		return 0;
 	}
 
 	read_inode(rd, InodeNO, Inode);
@@ -1296,11 +1296,12 @@ int chmod_reg_file(uint8_t* rd, uint16_t InodeNO, int mode)
 }
 int check_mode_file(uint8_t* rd, uint16_t InodeNO)
 {
+	int mode;
 	struct rd_inode* Inode;
 	if (!(Inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode))))
 	{
 		printk("No mem space!\n");
-		exit(-1);
+		return 0;
 	}
 
 	read_inode(rd, InodeNO, Inode);
