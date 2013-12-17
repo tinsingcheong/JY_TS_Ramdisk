@@ -4,12 +4,13 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 
 #include "ramdisk_user.h"
 extern struct file_object fd_table[1024];
 
 int ioctl_rd_fd; 
-int rd_create (char *pathname)
+int rd_create (char *pathname, mode_t mode)
 {
     struct rd_ops_arg_list rd_args;
     //printf("In rd_create already!");
@@ -20,6 +21,7 @@ int rd_create (char *pathname)
 
     rd_args.pathname = pathname;
     rd_args.path_len = strlen(pathname)+1;
+	rd_args.mode = mode;
 
     //printf("Create: Pass the struct to kernel!");
     ioctl(ioctl_rd_fd, RD_CREATE, &rd_args);
@@ -43,7 +45,7 @@ int rd_mkdir (char *pathname)
     return rd_args.ret; 
 }
 
-int rd_open (char *pathname)
+int rd_open (char *pathname, int flags)
 {
     struct rd_ops_arg_list rd_args;
     int fd;
@@ -55,6 +57,7 @@ int rd_open (char *pathname)
 
     rd_args.pathname = pathname;
     rd_args.path_len = strlen(pathname)+1;
+	rd_args.mode = flags;
     
     ioctl(ioctl_rd_fd, RD_OPEN, &rd_args);
 
@@ -199,6 +202,24 @@ int rd_readdir (int fd, char *address)
 	fd_table[fd].file_pos+=rd_args.ret;
 	printf("finish reading dir ,ret value is %d new file pos is %d\n",rd_args.ret,	fd_table[fd].file_pos);
     return rd_args.ret;
+}
+
+int rd_chmod(char *pathname, mode_t mode)
+{
+	struct rd_ops_arg_list rd_args;
+	printf("In rd_chmod already");
+
+    if (!ioctl_rd_fd)
+        ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
+    printf("chmod ramdisk!");
+
+	rd_args.pathname = pathname;
+	rd_args.path_len = strlen(pathname)+1;
+	rd_args.mode = mode;
+
+    ioctl(ioctl_rd_fd, RD_CHMOD, &rd_args);
+
+	return rd_args.ret;
 }
 
 int rd_sync()

@@ -38,6 +38,7 @@ struct fd_table_entry{
 struct rd_ops_arg_list {
     uint8_t* pathname;
     int path_len;
+	int mode;
     uint16_t inodeNO;
     int pos;
     uint8_t* buf;
@@ -45,9 +46,9 @@ struct rd_ops_arg_list {
     int ret;
 };
 
-int rd_create (char *pathname);
+int rd_create (char *pathname, mode_t mode);
 int rd_mkdir (char *pathname);
-int rd_open (char *pathname);
+int rd_open (char *pathname, int flags);
 int rd_close (int fd);
 int rd_read (int fd, char *address, int num_bytes);
 int rd_write (int fd, char *address, int num_bytes);

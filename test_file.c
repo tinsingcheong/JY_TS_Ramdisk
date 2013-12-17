@@ -46,6 +46,7 @@
 #define READDIR rd_readdir
 #define CLOSE   rd_close
 #define LSEEK   rd_lseek
+#define CHMOD   rd_chmod
 #define SYNC    rd_sync
 #define RESTORE rd_restore
 

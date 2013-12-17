@@ -27,7 +27,7 @@ MODULE_LICENSE("GPL");
 struct ramdisk_ops_arg_list {
   uint8_t* pathname;
   int pathname_len;
-
+  int mode;
   uint16_t inodeNO;
   int pos;
   uint8_t* buf;
@@ -145,9 +145,11 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 	char path[1024];
 	char parent[1024];
 	char File[14];
-	int ParentInodeNO;
+	uint16_t ParentInodeNO;
+	uint16_t InodeNO;
 	uint8_t* buf;
 	int size;
+	int mode;
 	switch (cmd){
 
 	case RD_CREATE:
@@ -160,7 +162,7 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 	//	printk("<1> After seperating the parent is %s and File is %s\n",parent, File);
 		ParentInodeNO=search_file(rd,parent);
 	//	printk("<1> The parent inode No is %d\n",ParentInodeNO);
-		ioc.ret=create_file(rd,ParentInodeNO,File);
+		ioc.ret=create_file(rd,ParentInodeNO,File, ioc.mode);
 	//	printk("<1> The create file ret value is %d\n", ioc.ret);
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
 		
@@ -196,7 +198,11 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 		copy_from_user(path, ioc.pathname, ioc.pathname_len);
 		printk("<1> opening file %s\n", path);
 		ioc.ret=search_file(rd,path);
-		printk("<1> the %s has inode is %d\n", path, ioc.ret);
+		mode=check_mode_file(rd,ioc.ret);
+		if ((mode == RD_READ_ONLY) && (ioc.mode != RD_READ_ONLY))
+		  ioc.ret = -1;
+		else if ((mode == RD_WRITE_ONLY) && (ioc.mode != RD_WRITE_ONLY))
+		  ioc.ret = -1;
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
 
 		up(&mutex);
@@ -306,6 +312,20 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 		printk("<1> the ret value is %d\n",ioc.ret);
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
 		
+		up(&mutex);
+		break;
+	case RD_CHMOD:
+		down_interruptible(&mutex);
+
+		copy_from_user(&ioc, (struct ramdisk_ops_arg_list*)arg, sizeof(struct ramdisk_ops_arg_list));
+		copy_from_user(path, ioc.pathname, ioc.pathname_len);
+		printk("<1> opening file %s\n", path);
+		InodeNO=search_file(rd,path);
+		printk("<1> The InodeNO is %u\n", InodeNO);
+		ioc.ret=chmod_reg_file(rd,InodeNO,ioc.mode);
+		printk("<1> The chmod ret value is %d\n", ioc.ret);
+		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
+
 		up(&mutex);
 		break;
 	case RD_SYNC:

@@ -58,7 +58,7 @@ int get_file_size (uint8_t* rd, uint16_t InodeNO)
 	}
 }
 
-int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
+int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name, int mode)
 {
     if (strlen(name) >= 14) {
 #ifdef UL_DEBUG
@@ -140,6 +140,7 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
         set_inode_bitmap(rd, InodeNO);
         Inode->type = (uint8_t) 0x01; // Initialize the type as regular file
         Inode->size = (uint32_t) 0x0; // Initialize the size as 0
+		Inode->mode = mode;
         update_inode(rd, InodeNO, Inode); // Update the new Inode
         // Update the Parent Inode information
         read_inode(rd, ParentInodeNO, ParentInode);
@@ -1277,4 +1278,33 @@ int find_same_name(uint8_t* rd, struct rd_inode* ParentInode, char* name)
 	vfree(ParentDirEntry);
 #endif
     return 0;
+}
+int chmod_reg_file(uint8_t* rd, uint16_t InodeNO, int mode)
+{
+	struct rd_inode* Inode;
+	if (!(Inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode))))
+	{
+		fprintf(stderr, "No mem space!\n");
+		exit(-1);
+	}
+
+	read_inode(rd, InodeNO, Inode);
+	Inode->mode = mode;
+	update_inode(rd, InodeNO, Inode);
+	vfree(Inode);
+	return 0;
+}
+int check_mode_file(uint8_t* rd, uint16_t InodeNO, int mode)
+{
+	struct rd_inode* Inode;
+	if (!(Inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode))))
+	{
+		fprintf(stderr, "No mem space!\n");
+		exit(-1);
+	}
+
+	read_inode(rd, InodeNO, Inode);
+	mode = Inode->mode;
+	vfree(Inode);
+	return mode;
 }
