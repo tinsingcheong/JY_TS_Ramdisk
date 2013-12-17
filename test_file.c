@@ -121,7 +121,7 @@ int main () {
 	fflush(stdout);
     memset (pathname, 0, 80);
   }   
-  retval = SYNC;
+  retval = SYNC();
     if (retval < 0) {
       fprintf (stderr, "creat: File creation error! status: %d (%s)\n",
 	       retval, pathname);
