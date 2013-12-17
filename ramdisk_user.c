@@ -219,6 +219,7 @@ int rd_sync()
 		printf("No more memory space!\n");
 		return(-1);
 	}
+	memset(ramdisk_backup,0,ramdisk_backup_s);
     printf("Before ioctl!\n");
 	ioctl(ioctl_rd_fd, RD_SYNC, &ramdisk_backup);
     printf("After ioctl!\n");
