@@ -244,8 +244,9 @@ int rd_restore()
 	fp=fopen("./ramdisk_backup","r");
 	ramdisk_backup_s = sizeof(uint8_t)*RAMDISK_SIZE;
 	ramdisk_backup = (uint8_t*)malloc(ramdisk_backup_s);
+	memset(ramdisk_backup,0,ramdisk_backup_s);
 	result = fread(ramdisk_backup, sizeof(uint8_t), ramdisk_backup_s, fp);
-	ioctl(ioctl_rd_fd, RD_RESTORE, &ramdisk_backup);
+	ioctl(ioctl_rd_fd, RD_RESTORE, ramdisk_backup);
 	fclose(fp);
 	free(ramdisk_backup);
 	return 0; 
