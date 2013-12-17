@@ -749,11 +749,21 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
     {
         if (i>=0 && i<=7) {
             read_blockNO = Inode->BlockPointer[i];
+#ifndef UL_DEBUG
+			printk("[remove_file] i=%d The block is going to be cleared is %d\n",i,read_blockNO);
+#endif
+
             clr_bitmap(rd, read_blockNO);
+
+
         }
         else if (i>7 && i<=7+64) {
             read_block_tableNO = Inode->BlockPointer[8];
             read_blockNO = *((uint32_t*)(rd+read_block_tableNO*RD_BLOCK_SIZE+(i-8)*4));
+#ifndef UL_DEBUG
+			printk("[remove_file] i=%d The block is going to be cleared is %d and %d\n",i,read_blockNO,read_block_tableNO);
+#endif
+
             clr_bitmap(rd, read_blockNO);
             clr_bitmap(rd, read_block_tableNO);
         }
@@ -761,12 +771,19 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
             read_double_tableNO = Inode->BlockPointer[9];
             read_block_tableNO = *((uint32_t*)(rd+read_double_tableNO*RD_BLOCK_SIZE+(i-(8+64))*4/64));
             read_blockNO = *((uint32_t*)(rd+read_block_tableNO*RD_BLOCK_SIZE+((i-(8+64))%64)*4));
+#ifndef UL_DEBUG
+			printk("[remove_file] i=%d The block is going to be cleared is %d and %d and %d\n",i,read_blockNO,read_block_tableNO,read_double_tableNO);
+#endif
+
             clr_bitmap(rd, read_blockNO);
             clr_bitmap(rd, read_block_tableNO);
             clr_bitmap(rd, read_double_tableNO);
         }
     }
-    
+   
+#ifndef UL_DEBUG
+	printk("<1> file content has been cleared and next step is to modify block in parent inode\n");
+#endif
     // Find the entry that need to be deleted in the Parent directory
     blockNO = (ParentInode->size%RD_BLOCK_SIZE)?(ParentInode->size/RD_BLOCK_SIZE+1):ParentInode->size/RD_BLOCK_SIZE;
 #ifdef UL_DEBUG
