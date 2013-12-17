@@ -216,7 +216,7 @@ int rd_sync()
 	ramdisk_backup_s = sizeof(uint8_t)*RAMDISK_SIZE;
 	ramdisk_backup = malloc(ramdisk_backup_s);
 	ioctl(ioctl_rd_fd, RD_SYNC, &ramdisk_backup);
-	result = fwrite(ramdisk_backup, RAMDISK_SIZE, 1, fp);
+	result = fwrite(ramdisk_backup, ramdisk_backup_s, 1, fp);
 	fclose(fp);
 	free(ramdisk_backup);
 	return 0; 
@@ -236,7 +236,7 @@ int rd_restore()
 	fp=fopen("./ramdisk_backup","r");
 	ramdisk_backup_s = sizeof(uint8_t)*RAMDISK_SIZE;
 	ramdisk_backup = malloc(ramdisk_backup_s);
-	result = fread(ramdisk_backup, 1, RAMDISK_SIZE, fp);
+	result = fread(ramdisk_backup, 1, ramdisk_backup_s, fp);
 	ioctl(ioctl_rd_fd, RD_RESTORE, &ramdisk_backup);
 	fclose(fp);
 	free(ramdisk_backup);
