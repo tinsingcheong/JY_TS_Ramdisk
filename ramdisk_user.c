@@ -221,7 +221,7 @@ int rd_sync()
 	}
 	memset(ramdisk_backup,0,ramdisk_backup_s);
     printf("Before ioctl!\n");
-	ioctl(ioctl_rd_fd, RD_SYNC, &ramdisk_backup);
+	ioctl(ioctl_rd_fd, RD_SYNC, ramdisk_backup);
     printf("After ioctl!\n");
 	fflush(stdout);
 	result = fwrite(ramdisk_backup, sizeof(uint8_t), ramdisk_backup_s, fp);
