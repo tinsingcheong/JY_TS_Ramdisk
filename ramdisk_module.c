@@ -198,11 +198,14 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 		copy_from_user(path, ioc.pathname, ioc.pathname_len);
 		printk("<1> opening file %s\n", path);
 		ioc.ret=search_file(rd,path);
+		printk("<1> RD_OPEN: file inodeNO is %d.\n", ioc.ret);
 		mode=check_mode_file(rd,ioc.ret);
+		printk("<1> RD_OPEN: after check the file mode is %d.\n", mode);
 		if ((mode == RD_READ_ONLY) && (ioc.mode != RD_READ_ONLY))
 		  ioc.ret = -1;
 		else if ((mode == RD_WRITE_ONLY) && (ioc.mode != RD_WRITE_ONLY))
 		  ioc.ret = -1;
+		
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
 
 		up(&mutex);
