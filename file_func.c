@@ -141,6 +141,7 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name, int mode)
         Inode->type = (uint8_t) 0x01; // Initialize the type as regular file
         Inode->size = (uint32_t) 0x0; // Initialize the size as 0
 		Inode->mode = mode;
+		printk("Create_File: The mode is %d.\n", Inode->mode);
         update_inode(rd, InodeNO, Inode); // Update the new Inode
         // Update the Parent Inode information
         read_inode(rd, ParentInodeNO, ParentInode);

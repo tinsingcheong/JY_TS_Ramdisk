@@ -22,7 +22,7 @@ int rd_create (char *pathname, mode_t mode)
     rd_args.pathname = pathname;
     rd_args.path_len = strlen(pathname)+1;
 	rd_args.mode = mode;
-
+	printf("User_Create_File: the mode is %d.\n", rd_args.mode);
     //printf("Create: Pass the struct to kernel!");
     ioctl(ioctl_rd_fd, RD_CREATE, &rd_args);
     //printf("Create: Return value is %d!", rd_args.ret);
