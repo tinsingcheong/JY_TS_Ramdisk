@@ -60,7 +60,7 @@ int rd_open (char *pathname, int flags)
 	rd_args.mode = flags;
     
     ioctl(ioctl_rd_fd, RD_OPEN, &rd_args);
-	if (rd_args.retval == -1)
+	if (rd_args.ret == -1)
 	  printf("User_RD_OPEN: Can not open the file!\n");
 	else
 	  printf("User_RD_OPEN: You have access to the file");
