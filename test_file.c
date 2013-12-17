@@ -71,7 +71,6 @@ int my_readdir(int fd, char* str)
 
 #endif
 
-
 // #define's to control whether single indirect or
 // double indirect block pointers are tested
 
