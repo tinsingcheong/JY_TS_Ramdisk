@@ -213,15 +213,16 @@ int rd_sync()
 	FILE *fp;
 	size_t ramdisk_backup_s, result;
 	fp=fopen("./ramdisk_backup","w+");
-    printf("Open the file already!");
 	ramdisk_backup_s = sizeof(uint8_t)*RAMDISK_SIZE;
     printf("ramdisk_backup_s is %u\n",ramdisk_backup_s);
-	fflush(stdout);
 	if (!(ramdisk_backup = malloc(ramdisk_backup_s))){
 		printf("No more memory space!\n");
 		return(-1);
 	}
+    printf("Before ioctl!\n");
 	ioctl(ioctl_rd_fd, RD_SYNC, &ramdisk_backup);
+    printf("After ioctl!\n");
+	fflush(stdout);
 	result = fwrite(ramdisk_backup, sizeof(uint8_t), ramdisk_backup_s, fp);
 	fclose(fp);
 	free(ramdisk_backup);
