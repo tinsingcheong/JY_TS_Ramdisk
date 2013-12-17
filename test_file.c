@@ -120,7 +120,7 @@ int main () {
      
   retval = OPEN (pathname, RD_WRITE_ONLY);
     if (retval < 0) 
-	  printf("Do not have the right access");
+	  printf("Do not have the right access or this file does not exist!\n");
 	retval = CHMOD(pathname, RD_WRITE_ONLY);
   retval = OPEN (pathname, RD_WRITE_ONLY);
     if (retval < 0) 
@@ -135,7 +135,7 @@ int main () {
   for (i = 0; i < 100; i++) { // go beyond the limit
     sprintf (pathname, PATH_PREFIX "/file%d", i);
     
-    retval = CREAT (pathname);
+    retval = CREAT (pathname,RD_READ_WRITE);
     printf("Create file %d!\n", i);
     
     if (retval < 0) {
@@ -203,7 +203,7 @@ int main () {
   for (i = 0; i < MAX_FILES + 1; i++) { // go beyond the limit
     sprintf (pathname, PATH_PREFIX "/file%d", i);
     
-    retval = CREAT (pathname);
+    retval = CREAT (pathname,RD_READ_WRITE);
     printf("Create file %d!\n", i);
     
     if (retval < 0) {
@@ -245,7 +245,7 @@ int main () {
 
   
   /* Generate one LARGEST file */
-  retval = CREAT (PATH_PREFIX "/bigfile");
+  retval = CREAT (PATH_PREFIX "/bigfile",RD_READ_WRITE);
 
   if (retval < 0) {
     fprintf (stderr, "creat: File creation error! status: %d\n",
@@ -254,7 +254,7 @@ int main () {
     exit(EXIT_FAILURE);
   }
 
-  retval =  OPEN (PATH_PREFIX "/bigfile"); /* Open file to write to it */
+  retval =  OPEN (PATH_PREFIX "/bigfile",RD_READ_WRITE); /* Open file to write to it */
   printf("Open file done!\n");
     
   
@@ -430,7 +430,7 @@ int main () {
   }
 
 #ifdef USE_RAMDISK
-  retval =  OPEN (PATH_PREFIX "/dir1"); /* Open directory file to read its entries */
+  retval =  OPEN (PATH_PREFIX "/dir1",RD_READ_WRITE); /* Open directory file to read its entries */
   
   if (retval < 0) {
     fprintf (stderr, "open: Directory open error! status: %d\n",
@@ -474,7 +474,7 @@ int main () {
     for (i = 0; i < 300; i++) { 
       sprintf (pathname, PATH_PREFIX "/file_p_%d", i);
       
-      retval = CREAT (pathname);
+      retval = CREAT (pathname,RD_READ_WRITE);
       
       if (retval < 0) {
 	fprintf (stderr, "(Parent) create: File creation error! status: %d\n", 
@@ -491,7 +491,7 @@ int main () {
     for (i = 0; i < 300; i++) { 
       sprintf (pathname, PATH_PREFIX "/file_c_%d", i);
       
-      retval = CREAT (pathname);
+      retval = CREAT (pathname,RD_READ_WRITE);
       
       if (retval < 0) {
 	fprintf (stderr, "(Child) create: File creation error! status: %d\n", 
