@@ -1289,6 +1289,7 @@ int chmod_reg_file(uint8_t* rd, uint16_t InodeNO, int mode)
 	}
 
 	read_inode(rd, InodeNO, Inode);
+	printk("The previous Inode mode is %d.\n",Inode->mode);
 	Inode->mode = mode;
 	update_inode(rd, InodeNO, Inode);
 	printk("The new Inode mode is %d.\n",Inode->mode);
