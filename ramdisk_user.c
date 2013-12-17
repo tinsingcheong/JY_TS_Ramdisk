@@ -279,7 +279,6 @@ int fd_find_pathname(struct file_object* table, char *pathname)
 }
 
 	
-}
 
 int fd_search_fd(struct file_object* table, uint16_t InodeNO)
 {
