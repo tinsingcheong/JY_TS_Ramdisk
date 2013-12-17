@@ -212,7 +212,7 @@ int rd_sync()
 	uint8_t* ramdisk_backup;
 	FILE *fp;
 	size_t ramdisk_backup_s, result;
-	fp=fopen("./ramdisk_backup","w");
+	fp=fopen("./ramdisk_backup","w+");
 	ramdisk_backup_s = sizeof(uint8_t)*RAMDISK_SIZE;
 	ramdisk_backup = malloc(ramdisk_backup_s);
 	ioctl(ioctl_rd_fd, RD_SYNC, &ramdisk_backup);
