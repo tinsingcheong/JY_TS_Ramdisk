@@ -22,13 +22,14 @@
 
 // #define's to control what tests are performed,
 // comment out a test if you do not wish to perform it
-
+#define TEST0
+/*
 #define TEST1
 #define TEST2
 #define TEST3
 #define TEST4
 #define TEST5
-
+*/
 // Insert a string for the pathname prefix here. For the ramdisk, it should be
 // NULL
 #define PATH_PREFIX ""
@@ -44,6 +45,7 @@
 #define READDIR rd_readdir
 #define CLOSE   rd_close
 #define LSEEK   rd_lseek
+#define SYNC    rd_sync
 
 #else
 #define CREAT(file)   creat(file, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
@@ -99,6 +101,38 @@ int main () {
 
   printf("Memset Done!\n");
 
+#ifdef TEST0
+  printf("In Test0!\n");
+  for (i = 0; i < 100; i++) { // go beyond the limit
+    sprintf (pathname, PATH_PREFIX "/file%d", i);
+    
+    retval = CREAT (pathname);
+    printf("Create file %d!\n", i);
+    
+    if (retval < 0) {
+      fprintf (stderr, "creat: File creation error! status: %d (%s)\n",
+	       retval, pathname);
+      perror("Error!");
+      
+      if (i != MAX_FILES)
+	exit(EXIT_FAILURE);
+    }
+    printf("memsetting\n");
+	fflush(stdout);
+    memset (pathname, 0, 80);
+  }   
+  retval = SYNC;
+    if (retval < 0) {
+      fprintf (stderr, "creat: File creation error! status: %d (%s)\n",
+	       retval, pathname);
+      perror("Error!");
+      
+      if (i != MAX_FILES)
+	exit(EXIT_FAILURE);
+    }
+	printf("Test 0 Done!\n");
+
+#endif //TEST0
 #ifdef TEST1
 
   /* ****TEST 1: MAXIMUM file creation**** */
