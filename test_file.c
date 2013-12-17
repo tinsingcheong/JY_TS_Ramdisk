@@ -104,10 +104,19 @@ int main () {
 
 #ifdef TEST0
   printf("In Test0!\n");
+  retval = RESTORE ();
+    if (retval < 0) {
+      fprintf (stderr, "creat: File creation error! status: %d (%s)\n",
+	       retval, pathname);
+      perror("Error!");
+      
+      if (i != MAX_FILES)
+	exit(EXIT_FAILURE);
+    }
   for (i = 0; i < 100; i++) { // go beyond the limit
     sprintf (pathname, PATH_PREFIX "/file%d", i);
     
-    retval = CREAT (pathname);
+    retval = UNLINK (pathname);
     printf("Create file %d!\n", i);
     
     if (retval < 0) {
@@ -122,15 +131,6 @@ int main () {
 	fflush(stdout);
     memset (pathname, 0, 80);
   }   
-  retval = SYNC ();
-    if (retval < 0) {
-      fprintf (stderr, "creat: File creation error! status: %d (%s)\n",
-	       retval, pathname);
-      perror("Error!");
-      
-      if (i != MAX_FILES)
-	exit(EXIT_FAILURE);
-    }
 	printf("Test 0 Done!\n");
 
 #endif //TEST0
