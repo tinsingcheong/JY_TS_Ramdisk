@@ -279,14 +279,3 @@ int fd_find_pathname(struct file_object* table, char *pathname)
 }
 
 	
-
-int fd_search_fd(struct file_object* table, uint16_t InodeNO)
-{
-    int i;
-    for (i=0;i<1024;i++)
-    {
-        if ((table[i].inodeNO == InodeNO) && table[i].valid == 1)
-            return i;
-    }
-    return(-1); 
-}
