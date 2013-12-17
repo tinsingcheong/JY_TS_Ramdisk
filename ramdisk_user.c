@@ -201,7 +201,7 @@ int rd_readdir (int fd, char *address)
     return rd_args.ret;
 }
 
-int rd_snyc( )
+int rd_snyc()
 {
     printf("In rd_sync already!\n");
 
@@ -209,6 +209,76 @@ int rd_snyc( )
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
     printf("Open ramdisk!");
 
+	uint8_t* ramdisk_backup;
+	FILE *fp;
+	size_t ramdisk_backup_s, result;
+	fp=fopen("./ramdisk_backup","w");
+	ramdisk_backup_s = sizeof(uint8_t)*RAMDISK_SIZE;
+	ramdisk_backup = malloc(ramdisk_backup_s);
+	ioctl(ioctl_rd_fd, RD_SYNC, &ramdisk_backup);
+	result = fwrite(ramdisk_backup, RAMDISK_SIZE, 1, fp);
+	fclose(fp);
+	free(ramdisk_backup);
+	return 0; 
+}
+
+int rd_restore()
+{
+    printf("In rd_restore already!\n");
+
+    if (!ioctl_rd_fd)
+        ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
+    printf("Open ramdisk!");
+
+	uint8_t* ramdisk_backup;
+	FILE *fp;
+	size_t ramdisk_backup_s, result;
+	fp=fopen("./ramdisk_backup","r");
+	ramdisk_backup_s = sizeof(uint8_t)*RAMDISK_SIZE;
+	ramdisk_backup = malloc(ramdisk_backup_s);
+	result = fread(ramdisk_backup, 1, RAMDISK_SIZE, fp);
+	ioctl(ioctl_rd_fd, RD_RESTORE, &ramdisk_backup);
+	fclose(fp);
+	free(ramdisk_backup);
+	return 0; 
+}
+
+int fd_search_fd(struct file_object* table, uint16_t InodeNO)
+{
+    int i;
+    for (i=0;i<1024;i++)
+    {
+        if ((table[i].inodeNO == InodeNO) && table[i].valid == 1)
+            return i;
+    }
+    return(-1); 
+}
+
+int fd_find_free_fd(struct file_object* table) 
+{
+    int i;
+    for (i=0;i<1024;i++)
+    {
+        if (table[i].valid == 0)
+            return i;
+    }
+    return(-1);
+}
+
+int fd_find_pathname(struct file_object* table, char *pathname)
+{
+    int i;
+    for (i=0;i<1024;i++)
+    {
+		//printf("i=%d\n",i);
+		fflush(stdout);
+        if ((strcmp(table[i].pathname, pathname)==0) && table[i].valid == 1)
+            return 0;
+    }
+    return(-1);
+}
+
+	
 }
 
 int fd_search_fd(struct file_object* table, uint16_t InodeNO)

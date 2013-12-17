@@ -17,7 +17,9 @@
 //#include "ramdisk_struct.h"
 #include "rw.h"
 
-
+#define RD_READ_WRITE 0
+#define RD_READ_ONLY  1
+#define RD_WRITE_ONLY 2
 
 MODULE_LICENSE("GPL");
 
@@ -46,6 +48,9 @@ struct ramdisk_ops_arg_list {
 #define RD_LSEEK   _IOWR(5,0,struct ramdisk_ops_arg_list)
 #define RD_UNLINK  _IOWR(6,0,struct ramdisk_ops_arg_list)
 #define RD_READDIR _IOWR(7,0,struct ramdisk_ops_arg_list)
+#define RD_CHMOD   _IOWR(8,0,struct ramdisk_ops_arg_list)
+#define RD_SYNC    _IOWR(9,0,struct ramdisk_ops_arg_list)
+#define RD_RESTORE _IOWR(10,0,struct ramdisk_ops_arg_list)
 
 static uint8_t* rd;
 
@@ -301,6 +306,19 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 		printk("<1> the ret value is %d\n",ioc.ret);
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
 		
+		up(&mutex);
+		break;
+	case RD_SYNC:
+		down_interruptible(&mutex);
+
+		copy_to_user(uint8_t* user_backup, &rd, sizeof(uint8_t)*RAMDISK_SIZE);
+		up(&mutex);
+		break;
+
+	case RD_RESTORE:
+		down_interruptible(&mutex);
+
+		copy_from_user(&rd, uint8_t* user_backup, sizeof(uint8_t)*RAMDISK_SIZE);
 		up(&mutex);
 		break;
 
