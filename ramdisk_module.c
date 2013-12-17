@@ -311,14 +311,14 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 	case RD_SYNC:
 		down_interruptible(&mutex);
 
-		copy_to_user((uint8_t*)arg, &rd, sizeof(uint8_t)*RAMDISK_SIZE);
+		copy_to_user((uint8_t*)arg, rd, sizeof(uint8_t)*RAMDISK_SIZE);
 		up(&mutex);
 		break;
 
 	case RD_RESTORE:
 		down_interruptible(&mutex);
 
-		copy_from_user(&rd, (uint8_t*)arg, sizeof(uint8_t)*RAMDISK_SIZE);
+		copy_from_user(rd, (uint8_t*)arg, sizeof(uint8_t)*RAMDISK_SIZE);
 		up(&mutex);
 		break;
 
