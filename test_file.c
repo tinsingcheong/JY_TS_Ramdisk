@@ -22,8 +22,9 @@
 
 // #define's to control what tests are performed,
 // comment out a test if you do not wish to perform it
-#define TEST0_SYNC
-#define TEST0_RESTORE
+//#define TEST0_SYNC
+//#define TEST0_RESTORE
+#define TEST_ACCESS
 /*
 #define TEST1
 #define TEST2
@@ -103,7 +104,32 @@ int main () {
   memset (data3, '3', sizeof (data3));
 
   printf("Memset Done!\n");
+#ifdef TEST_ACCESS
+  printf("In Access Test!\n");
+    sprintf (pathname, PATH_PREFIX "/file1");
+    
+    retval = CREAT (pathname, RD_READ_ONLY);
+    printf("Create file %d!\n", i);
+    
+    if (retval < 0) {
+      fprintf (stderr, "creat: File creation error! status: %d (%s)\n",
+	       retval, pathname);
+      perror("Error!");
+	}  
+    printf("memsetting\n");
+	fflush(stdout);
+     
+  retval = OPEN (pathname, RD_WRITE_ONLY);
+    if (retval < 0) 
+	  printf("Do not have the right access");
+	retval = CHMOD(pathname, RD_WRITE_ONLY);
+  retval = OPEN (pathname, RD_WRITE_ONLY);
+    if (retval < 0) 
+	  printf("Do not have the right access");
+    memset (pathname, 0, 80);
+	printf("Access Test Done!\n");
 
+#endif // TEST_ACCESS
 #ifdef TEST0_SYNC
   printf("In Test0!\n");
   for (i = 0; i < 100; i++) { // go beyond the limit
@@ -135,7 +161,7 @@ int main () {
     }
 	printf("Test 0 Done!\n");
 
-#endif //TEST0
+#endif //TEST0_SYNC
 #ifdef TEST0_RESTORE
   printf("In Test0!\n");
   retval = RESTORE ();
@@ -167,7 +193,7 @@ int main () {
   }   
 	printf("Test 0 Done!\n");
 
-#endif //TEST0
+#endif //TEST0_RESTORE
 #ifdef TEST1
 
   /* ****TEST 1: MAXIMUM file creation**** */
