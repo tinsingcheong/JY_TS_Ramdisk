@@ -214,6 +214,7 @@ int rd_sync()
 	size_t ramdisk_backup_s, result;
 	fp=fopen("./ramdisk_backup","w+");
 	ramdisk_backup_s = sizeof(uint8_t)*RAMDISK_SIZE;
+	fflush(stdout);
 	if (!(ramdisk_backup = malloc(ramdisk_backup_s))){
 		printf("No more memory space!\n");
 		return(-1);
