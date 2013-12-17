@@ -769,7 +769,7 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
         }
         else if (i>7+64 && i<=7+64+64*64) {
             read_double_tableNO = Inode->BlockPointer[9];
-            read_block_tableNO = *((uint32_t*)(rd+read_double_tableNO*RD_BLOCK_SIZE+(i-(8+64))*4/64));
+            read_block_tableNO = *((uint32_t*)(rd+read_double_tableNO*RD_BLOCK_SIZE+((i-(8+64))/64)*4));
             read_blockNO = *((uint32_t*)(rd+read_block_tableNO*RD_BLOCK_SIZE+((i-(8+64))%64)*4));
 #ifndef UL_DEBUG
 			printk("[remove_file] i=%d The block is going to be cleared is %d and %d and %d\n",i,read_blockNO,read_block_tableNO,read_double_tableNO);
