@@ -18,8 +18,8 @@ struct rd_super_block{
 
 struct rd_inode{
 	uint8_t type;//1 is regular file, 0 is dir file
-	int mode;
 	uint32_t size;
+	int mode;
 	uint32_t BlockPointer[10];
 };
 

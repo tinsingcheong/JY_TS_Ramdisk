@@ -64,11 +64,15 @@ void update_inode(uint8_t* rd, uint16_t NodeNO, struct rd_inode* Inode){
 	rd[INODE_BASE+NodeNO*64+2]=(uint8_t)((Inode->size & 0x0000ff00)>>BYTELEN);
 	rd[INODE_BASE+NodeNO*64+3]=(uint8_t)((Inode->size & 0x00ff0000)>>(2*BYTELEN));
 	rd[INODE_BASE+NodeNO*64+4]=(uint8_t)(Inode->size>>(3*BYTELEN));
+	rd[INODE_BASE+NodeNO*64+5]=(uint8_t)(Inode->mode & 0x000000ff);
+	rd[INODE_BASE+NodeNO*64+6]=(uint8_t)((Inode->mode & 0x0000ff00)>>BYTELEN);
+	rd[INODE_BASE+NodeNO*64+7]=(uint8_t)((Inode->mode & 0x00ff0000)>>(2*BYTELEN));
+	rd[INODE_BASE+NodeNO*64+8]=(uint8_t)(Inode->mode>>(3*BYTELEN));
 	for(i=0;i<10;i++){
-		rd[INODE_BASE+NodeNO*64+5+i*4]=(uint8_t)(Inode->BlockPointer[i] & 0x000000ff);
-		rd[INODE_BASE+NodeNO*64+6+i*4]=(uint8_t)((Inode->BlockPointer[i] & 0x0000ff00)>>BYTELEN);
-		rd[INODE_BASE+NodeNO*64+7+i*4]=(uint8_t)((Inode->BlockPointer[i] & 0x00ff0000)>>(2*BYTELEN));
-		rd[INODE_BASE+NodeNO*64+8+i*4]=(uint8_t)(Inode->BlockPointer[i]>>(3*BYTELEN));
+		rd[INODE_BASE+NodeNO*64+9+i*4]=(uint8_t)(Inode->BlockPointer[i] & 0x000000ff);
+		rd[INODE_BASE+NodeNO*64+10+i*4]=(uint8_t)((Inode->BlockPointer[i] & 0x0000ff00)>>BYTELEN);
+		rd[INODE_BASE+NodeNO*64+11+i*4]=(uint8_t)((Inode->BlockPointer[i] & 0x00ff0000)>>(2*BYTELEN));
+		rd[INODE_BASE+NodeNO*64+12+i*4]=(uint8_t)(Inode->BlockPointer[i]>>(3*BYTELEN));
 	}
 }
 
@@ -77,9 +81,11 @@ void read_inode(uint8_t* rd, uint16_t NodeNO, struct rd_inode* Inode){
 	Inode->type=rd[INODE_BASE+NodeNO*64];
 	Inode->size=(uint32_t)(rd[INODE_BASE+NodeNO*64+1]) | ((uint32_t)(rd[INODE_BASE+NodeNO*64+2])<<BYTELEN) |
 				((uint32_t)(rd[INODE_BASE+NodeNO*64+3])<<(2*BYTELEN)) | ((uint32_t)(rd[INODE_BASE+NodeNO*64+4])<<(3*BYTELEN));
+	Inode->mode=(uint32_t)(rd[INODE_BASE+NodeNO*64+5]) | ((uint32_t)(rd[INODE_BASE+NodeNO*64+6])<<BYTELEN) |
+				((uint32_t)(rd[INODE_BASE+NodeNO*64+7])<<(2*BYTELEN)) | ((uint32_t)(rd[INODE_BASE+NodeNO*64+8])<<(3*BYTELEN));
 	for(i=0;i<10;i++){
-		Inode->BlockPointer[i]=(uint32_t)(rd[INODE_BASE+NodeNO*64+5+i*4]) | ((uint32_t)(rd[INODE_BASE+NodeNO*64+6+i*4])<<BYTELEN) |
-				((uint32_t)(rd[INODE_BASE+NodeNO*64+7+i*4])<<(2*BYTELEN)) | ((uint32_t)(rd[INODE_BASE+NodeNO*64+8+i*4])<<(3*BYTELEN));
+		Inode->BlockPointer[i]=(uint32_t)(rd[INODE_BASE+NodeNO*64+9+i*4]) | ((uint32_t)(rd[INODE_BASE+NodeNO*64+10+i*4])<<BYTELEN) |
+				((uint32_t)(rd[INODE_BASE+NodeNO*64+11+i*4])<<(2*BYTELEN)) | ((uint32_t)(rd[INODE_BASE+NodeNO*64+12+i*4])<<(3*BYTELEN));
 	}
 }
 
