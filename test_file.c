@@ -298,6 +298,8 @@ int main () {
     exit(EXIT_FAILURE);
   }
 
+  printf("Test 3 done!\n");
+
 #endif // TEST3
 
 #ifdef TEST4
