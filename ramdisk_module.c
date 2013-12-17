@@ -205,6 +205,8 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 		  ioc.ret = -1;
 		else if ((mode == RD_WRITE_ONLY) && (ioc.mode != RD_WRITE_ONLY))
 		  ioc.ret = -1;
+		else 
+		  ioc.ret=search_file(rd,path);
 		
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
 

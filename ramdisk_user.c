@@ -60,6 +60,10 @@ int rd_open (char *pathname, int flags)
 	rd_args.mode = flags;
     
     ioctl(ioctl_rd_fd, RD_OPEN, &rd_args);
+	if (rd_args.retval == -1)
+	  printf("User_RD_OPEN: Can not open the file!\n");
+	else
+	  printf("User_RD_OPEN: You have access to the file");
 
     fd = fd_search_fd(fd_table, rd_args.inodeNO);
 	printf("%s has fd=%d and inode=%d\n",pathname,fd,fd_table[fd].inodeNO);
