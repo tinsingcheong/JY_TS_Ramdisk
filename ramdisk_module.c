@@ -241,9 +241,11 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 	case RD_UNLINK:
 		down_interruptible(&mutex);
 
+		printk("<1> start unlinking\n");
 		copy_from_user(&ioc, (struct ramdisk_ops_arg_list*)arg, sizeof(struct ramdisk_ops_arg_list));
 		copy_from_user(path, ioc.pathname, ioc.pathname_len);
 		int inodeNO=search_file(rd,path);
+		printk("<1> %s inode is %d\n",path,inodeNO);
 		if(inodeNO<0){
 			ioc.ret=-1;
 			copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
@@ -253,6 +255,7 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 		}
 		seperate_path(path,ioc.pathname_len,parent,File);
 		ParentInodeNO=search_file(rd,parent);
+		printk("<1> Parent %s inode is %d\n",parent, ParentInodeNO);
 		if(ParentInodeNO<0){
 			ioc.ret=-1;
 			copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
@@ -263,19 +266,26 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 
 		struct rd_inode* inode;
 		if(!(inode=(struct rd_inode*)vmalloc(sizeof(struct rd_inode)))){
-			printk("<1>No enough space\n");
+			printk("<1> No enough space\n");
 			return 1;
 		}
+		printk("<1> reading inode %d\n",inodeNO);
 		read_inode(rd,inodeNO,inode);
 		if(inode->type==1){
+			printk("<1> start removing file\n");
 			ioc.ret=remove_file(rd,ParentInodeNO,inodeNO,File);
+			printk("<1> finish removing file ret val is %d\n",ioc.ret);
 			copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
 			
 			up(&mutex);
 			break;
 		}
 		if(inode->type==0){
+			printk("<1> start removing dir\n");
+
 			ioc.ret=remove_dir(rd,ParentInodeNO,inodeNO,File);
+			printk("<1> finish removing dir ret val is %d\n",ioc.ret);
+
 			copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
 			
 			up(&mutex);
