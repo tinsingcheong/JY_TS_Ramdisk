@@ -46,6 +46,7 @@
 #define CLOSE   rd_close
 #define LSEEK   rd_lseek
 #define SYNC    rd_sync
+#define RESTORE rd_restore
 
 #else
 #define CREAT(file)   creat(file, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
@@ -121,7 +122,7 @@ int main () {
 	fflush(stdout);
     memset (pathname, 0, 80);
   }   
-  retval = SYNC();
+  retval = SYNC ();
     if (retval < 0) {
       fprintf (stderr, "creat: File creation error! status: %d (%s)\n",
 	       retval, pathname);

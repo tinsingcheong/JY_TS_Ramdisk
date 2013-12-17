@@ -54,8 +54,8 @@ int rd_write (int fd, char *address, int num_bytes);
 int rd_lseek (int fd, int offset);
 int rd_unlink (char *pathname);
 int rd_readdir (int fd, char *address);
-int rd_sync();
-int rd_restore();
+int rd_sync ();
+int rd_restore ();
 
 int fd_search_fd(struct file_object* table, uint16_t InodeNO);
 int fd_find_free_fd(struct file_object* table);

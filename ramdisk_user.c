@@ -201,7 +201,7 @@ int rd_readdir (int fd, char *address)
     return rd_args.ret;
 }
 
-int rd_snyc()
+int rd_sync()
 {
     printf("In rd_sync already!\n");
 
