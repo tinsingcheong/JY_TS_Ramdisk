@@ -215,7 +215,7 @@ int rd_sync()
 	fp=fopen("./ramdisk_backup","w+");
 	ramdisk_backup_s = sizeof(uint8_t)*RAMDISK_SIZE;
     printf("ramdisk_backup_s is %u\n",ramdisk_backup_s);
-	if (!(ramdisk_backup = malloc(ramdisk_backup_s))){
+	if (!(ramdisk_backup = (uint8_t*)malloc(ramdisk_backup_s))){
 		printf("No more memory space!\n");
 		return(-1);
 	}
@@ -242,7 +242,7 @@ int rd_restore()
 	size_t ramdisk_backup_s, result;
 	fp=fopen("./ramdisk_backup","r");
 	ramdisk_backup_s = sizeof(uint8_t)*RAMDISK_SIZE;
-	ramdisk_backup = malloc(ramdisk_backup_s);
+	ramdisk_backup = (uint8_t*)malloc(ramdisk_backup_s);
 	result = fread(ramdisk_backup, sizeof(uint8_t), ramdisk_backup_s, fp);
 	ioctl(ioctl_rd_fd, RD_RESTORE, &ramdisk_backup);
 	fclose(fp);
