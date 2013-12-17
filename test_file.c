@@ -299,11 +299,13 @@ int main () {
   }
 
   printf("Test 3 done!\n");
+  fflush(stdout);
 
 #endif // TEST3
 
 #ifdef TEST4
   
+  printf("Test4 starts\n");
   /* ****TEST 4: Make directory and read directory entries**** */
   retval = MKDIR (PATH_PREFIX "/dir1");
     
