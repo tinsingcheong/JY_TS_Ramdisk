@@ -290,28 +290,3 @@ int fd_search_fd(struct file_object* table, uint16_t InodeNO)
     }
     return(-1); 
 }
-
-int fd_find_free_fd(struct file_object* table) 
-{
-    int i;
-    for (i=0;i<1024;i++)
-    {
-        if (table[i].valid == 0)
-            return i;
-    }
-    return(-1);
-}
-
-int fd_find_pathname(struct file_object* table, char *pathname)
-{
-    int i;
-    for (i=0;i<1024;i++)
-    {
-		//printf("i=%d\n",i);
-		fflush(stdout);
-        if ((strcmp(table[i].pathname, pathname)==0) && table[i].valid == 1)
-            return 0;
-    }
-    return(-1);
-}
-
