@@ -105,7 +105,8 @@ int main () {
   printf("Memset Done!\n");
 #ifdef TEST_ACCESS
   printf("In Access Test!\n");
-    sprintf (pathname, PATH_PREFIX "/file1");
+  i=1;
+    sprintf (pathname, PATH_PREFIX "/file%d", i);
     
     retval = CREAT (pathname, RD_READ_ONLY);
     printf("Create file %d!\n", i);
@@ -115,7 +116,6 @@ int main () {
 	       retval, pathname);
       perror("Error!");
 	}  
-    printf("memsetting\n");
 	fflush(stdout);
      
   retval = OPEN (pathname, RD_WRITE_ONLY);
@@ -125,6 +125,7 @@ int main () {
   retval = OPEN (pathname, RD_WRITE_ONLY);
     if (retval < 0) 
 	  printf("Do not have the right access");
+    printf("memsetting\n");
     memset (pathname, 0, 80);
 	printf("Access Test Done!\n");
 

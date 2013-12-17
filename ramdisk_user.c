@@ -53,7 +53,7 @@ int rd_open (char *pathname, int flags)
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
-    printf("Open ramdisk!");
+    printf("Open ramdisk!\n");
 
     rd_args.pathname = pathname;
     rd_args.path_len = strlen(pathname)+1;
@@ -207,11 +207,11 @@ int rd_readdir (int fd, char *address)
 int rd_chmod(char *pathname, mode_t mode)
 {
 	struct rd_ops_arg_list rd_args;
-	printf("In rd_chmod already");
+	printf("In rd_chmod already!\n");
 
     if (!ioctl_rd_fd)
         ioctl_rd_fd = open("/proc/ramdisk", O_RDONLY);
-    printf("chmod ramdisk!");
+    printf("chmod ramdisk!\n");
 
 	rd_args.pathname = pathname;
 	rd_args.path_len = strlen(pathname)+1;

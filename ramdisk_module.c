@@ -323,7 +323,7 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 		InodeNO=search_file(rd,path);
 		printk("<1> The InodeNO is %u\n", InodeNO);
 		ioc.ret=chmod_reg_file(rd,InodeNO,ioc.mode);
-		printk("<1> The chmod ret value is %d\n", ioc.ret);
+		printk("<1> The changed mode is %d;The chmod ret value is %d\n", ioc.mode, ioc.ret);
 		copy_to_user((struct ramdisk_ops_arg_list*)arg, &ioc, sizeof(struct ramdisk_ops_arg_list));
 
 		up(&mutex);
