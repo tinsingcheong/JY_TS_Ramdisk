@@ -200,7 +200,7 @@ static int ramdisk_ioctl(struct rd_inode *inode, struct file *file,
 		ioc.ret=search_file(rd,path);
 		printk("<1> RD_OPEN: file inodeNO is %d.\n", ioc.ret);
 		mode=check_mode_file(rd,ioc.ret);
-		printk("<1> RD_OPEN: after check the file mode is %d.\n", mode);
+		printk("<1> RD_OPEN: after check the file mode is %d, the flags is %d.\n", mode, ioc.mode);
 		if ((mode == RD_READ_ONLY) && (ioc.mode != RD_READ_ONLY))
 		  ioc.ret = -1;
 		else if ((mode == RD_WRITE_ONLY) && (ioc.mode != RD_WRITE_ONLY))
