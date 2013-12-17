@@ -275,20 +275,20 @@ int create_file (uint8_t* rd, uint16_t ParentInodeNO, char* name)
                         return(-1);
                     }
                     set_bitmap(rd, new_entry_block_id);
-                    rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]=(uint8_t)(new_entry_block_id & 0x000000ff);
-                    rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64+1]=(uint8_t)((new_entry_block_id & 0x0000ff00)>>BYTELEN);
-                    rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64+2]=(uint8_t)((new_entry_block_id & 0x00ff0000)>>(2*BYTELEN));
-                    rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64+3]=(uint8_t)((new_entry_block_id & 0xff000000)>>(3*BYTELEN));
+                    rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)((blockNO-(8+64))/64)*4]=(uint8_t)(new_entry_block_id & 0x000000ff);
+                    rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)((blockNO-(8+64))/64)*4+1]=(uint8_t)((new_entry_block_id & 0x0000ff00)>>BYTELEN);
+                    rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)((blockNO-(8+64))/64)*4+2]=(uint8_t)((new_entry_block_id & 0x00ff0000)>>(2*BYTELEN));
+                    rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)((blockNO-(8+64))/64)*4+3]=(uint8_t)((new_entry_block_id & 0xff000000)>>(3*BYTELEN));
                     rd[new_entry_block_id*RD_BLOCK_SIZE] = (uint8_t)(new_block_id & 0x000000ff);
                     rd[new_entry_block_id*RD_BLOCK_SIZE+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
                     rd[new_entry_block_id*RD_BLOCK_SIZE+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
                     rd[new_entry_block_id*RD_BLOCK_SIZE+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
                 }
                 else {
-                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*RD_BLOCK_SIZE+((blockNO-8-64)%64)*4] = (uint8_t)(new_block_id & 0x000000ff);
-                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*RD_BLOCK_SIZE+((blockNO-8-64)%64)*4+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
-                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*RD_BLOCK_SIZE+((blockNO-8-64)%64)*4+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
-                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*RD_BLOCK_SIZE+((blockNO-8-64)%64)*4+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
+                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)((blockNO-(8+64))/64)*4]*RD_BLOCK_SIZE+((blockNO-8-64)%64)*4] = (uint8_t)(new_block_id & 0x000000ff);
+                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)((blockNO-(8+64))/64)*4]*RD_BLOCK_SIZE+((blockNO-8-64)%64)*4+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
+                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)((blockNO-(8+64))/64)*4]*RD_BLOCK_SIZE+((blockNO-8-64)%64)*4+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
+                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)((blockNO-(8+64))/64)*4]*RD_BLOCK_SIZE+((blockNO-8-64)%64)*4+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
                 }
             }
 #ifdef UL_DEBUG
@@ -570,20 +570,20 @@ int create_dir (uint8_t* rd, uint16_t ParentInodeNO, char* name)
                         return(-1);
                     }
                     set_bitmap(rd, new_entry_block_id);
-                    rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]=(uint8_t)(new_entry_block_id & 0x000000ff);
-                    rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64+1]=(uint8_t)((new_entry_block_id & 0x0000ff00)>>BYTELEN);
-                    rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64+2]=(uint8_t)((new_entry_block_id & 0x00ff0000)>>(2*BYTELEN));
-                    rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64+3]=(uint8_t)((new_entry_block_id & 0xff000000)>>(3*BYTELEN));
+                    rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)((blockNO-(8+64))/64)*4]=(uint8_t)(new_entry_block_id & 0x000000ff);
+                    rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)((blockNO-(8+64))/64)*4+1]=(uint8_t)((new_entry_block_id & 0x0000ff00)>>BYTELEN);
+                    rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)((blockNO-(8+64))/64)*4+2]=(uint8_t)((new_entry_block_id & 0x00ff0000)>>(2*BYTELEN));
+                    rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)((blockNO-(8+64))/64)*4+3]=(uint8_t)((new_entry_block_id & 0xff000000)>>(3*BYTELEN));
                     rd[new_entry_block_id*RD_BLOCK_SIZE] = (uint8_t)(new_block_id & 0x000000ff);
                     rd[new_entry_block_id*RD_BLOCK_SIZE+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
                     rd[new_entry_block_id*RD_BLOCK_SIZE+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
                     rd[new_entry_block_id*RD_BLOCK_SIZE+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
                 }
                 else {
-                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*RD_BLOCK_SIZE+((blockNO-8-64)%64)*4] = (uint8_t)(new_block_id & 0x000000ff);
-                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*RD_BLOCK_SIZE+((blockNO-8-64)%64)*4+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
-                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*RD_BLOCK_SIZE+((blockNO-8-64)%64)*4+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
-                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)(blockNO-(8+64))*4/64]*RD_BLOCK_SIZE+((blockNO-8-64)%64)*4+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
+                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)((blockNO-(8+64))/64)*4]*RD_BLOCK_SIZE+((blockNO-8-64)%64)*4] = (uint8_t)(new_block_id & 0x000000ff);
+                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)((blockNO-(8+64))/64)*4]*RD_BLOCK_SIZE+((blockNO-8-64)%64)*4+1] = (uint8_t)((new_block_id & 0x0000ff00)>>BYTELEN);
+                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)((blockNO-(8+64))/64)*4]*RD_BLOCK_SIZE+((blockNO-8-64)%64)*4+2] = (uint8_t)((new_block_id & 0x00ff0000)>>(2*BYTELEN));
+                    rd[(uint32_t)rd[ParentInode->BlockPointer[9]*RD_BLOCK_SIZE+(uint32_t)((blockNO-(8+64))/64)*4]*RD_BLOCK_SIZE+((blockNO-8-64)%64)*4+3] = (uint8_t)((new_block_id & 0xff000000)>>(3*BYTELEN));
                 }
             }
 #ifdef UL_DEBUG
@@ -823,7 +823,7 @@ int remove_file (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* na
         else if (i>7+64 && i<=7+64+64*64) {
             for (j=0;j<16;j++) {
                 read_double_tableNO = ParentInode->BlockPointer[9];
-                read_block_tableNO = *((uint32_t*)(rd+read_double_tableNO*RD_BLOCK_SIZE+((i-(8+64))*4/64)));
+                read_block_tableNO = *((uint32_t*)(rd+read_double_tableNO*RD_BLOCK_SIZE+((i-(8+64))/64)*4));
                 read_blockNO = *((uint32_t*)(rd+read_block_tableNO*RD_BLOCK_SIZE+((i-(8+64))%64)*4));
                 read_dir_entry(&rd[read_blockNO*RD_BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
                 if (strcmp(ParentDirEntry->filename, name)==0){
@@ -976,7 +976,7 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
         }
         else if (blockNO_file>7+64 && blockNO_file<=7+64+64*64) {
             read_double_tableNO = Inode->BlockPointer[9];
-            read_block_tableNO = *((uint32_t*)(rd+read_double_tableNO*RD_BLOCK_SIZE+(blockNO_file-(8+64))*4/64));
+            read_block_tableNO = *((uint32_t*)(rd+read_double_tableNO*RD_BLOCK_SIZE+((blockNO_file-(8+64))/64)*4));
             read_blockNO = *((uint32_t*)(rd+read_block_tableNO*RD_BLOCK_SIZE+((blockNO_file-(8+64))%64)*4));
             read_dir_entry(&rd[read_blockNO*RD_BLOCK_SIZE+((i-(8+64)*16)%16)*ENTRY_SIZE], DeleteEntry);
         }
@@ -1020,7 +1020,7 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
         }
         else if (i>7+64 && i<=7+64+64*64) {
             read_double_tableNO = Inode->BlockPointer[9];
-            read_block_tableNO = *((uint32_t*)(rd+read_double_tableNO*RD_BLOCK_SIZE+(i-(8+64))*4/64));
+            read_block_tableNO = *((uint32_t*)(rd+read_double_tableNO*RD_BLOCK_SIZE+((i-(8+64))/64)*4));
             read_blockNO = *((uint32_t*)(rd+read_block_tableNO*RD_BLOCK_SIZE+((i-(8+64))%64)*4));
             clr_bitmap(rd,read_blockNO);
             clr_bitmap(rd,read_block_tableNO);
@@ -1068,7 +1068,7 @@ int remove_dir (uint8_t* rd, uint16_t ParentInodeNO, uint16_t InodeNO, char* nam
         else if (i>7+64 && i<=7+64+64*64) {
             for (j=0;j<16;j++) {
                 read_double_tableNO=ParentInode->BlockPointer[9];
-                read_block_tableNO=*((uint32_t*)(rd+read_double_tableNO*RD_BLOCK_SIZE+(i-(8+64))*4/64));
+                read_block_tableNO=*((uint32_t*)(rd+read_double_tableNO*RD_BLOCK_SIZE+((i-(8+64))/64)*4));
                 read_blockNO=*((uint32_t*)(rd+read_block_tableNO*RD_BLOCK_SIZE+((i-(8+64))%64)*4));
                 read_dir_entry(&rd[read_blockNO*RD_BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
                 if (strcmp(ParentDirEntry->filename, name)==0){
@@ -1265,7 +1265,7 @@ int find_same_name(uint8_t* rd, struct rd_inode* ParentInode, char* name)
         else if (i>7+64 && i<=7+64+64*64) {
             for (j=0;j<16;j++) {
                 read_double_tableNO = ParentInode->BlockPointer[9];
-                read_block_tableNO = *((uint32_t*)(rd+read_double_tableNO*RD_BLOCK_SIZE+((i-(8+64))*4/64)));
+                read_block_tableNO = *((uint32_t*)(rd+read_double_tableNO*RD_BLOCK_SIZE+((i-(8+64))/64)*4));
                 read_blockNO = *((uint32_t*)(rd+read_block_tableNO*RD_BLOCK_SIZE+((i-(8+64))%64)*4));
                 read_dir_entry(&rd[read_blockNO*RD_BLOCK_SIZE+j*ENTRY_SIZE], ParentDirEntry);
                 if (strcmp(ParentDirEntry->filename, name)==0)
